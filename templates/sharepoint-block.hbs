@@ -1,0 +1,28 @@
+<div>
+    {{#each block.data.details as |detail|}}
+    <div>
+        <div class="p-title">{{detail.Title}}</div>
+        <a class="p-link" href="{{detail.Path}}">(View in Sharepoint)</a>
+
+        <div>
+            <span class="p-key">Author: </span>
+            <span class="p-value">{{detail.Author}}</span>
+        </div>
+        <div>
+            <span class="p-key">Size: </span>
+            <span class="p-value">{{detail.Size}}</span>
+        </div>
+        <div>
+            <span class="p-key">Last Modified: </span>
+            <span class="p-value">{{detail.LastModifiedTime}}</span>
+        </div>
+        <div>
+            <span class="p-key">File Type: </span>
+            <span class="p-value">{{detail.FileType}}</span>
+        </div>
+    </div>
+
+    <br />
+    <hr />
+    {{/each}}
+</div>
