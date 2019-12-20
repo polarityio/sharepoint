@@ -5,7 +5,7 @@ const util = require("util");
 const url = require("url");
 const fs = require("fs");
 const NodeCache = require("node-cache");
-const tokenCache = new NodeCache({
+const cache = new NodeCache({
   stdTTL: 60 * 10
 });
 const MAX_PARALLEL_LOOKUPS = 10;
@@ -121,15 +121,15 @@ function getRequestOptions() {
 }
 
 const getTokenCacheKey = (options) =>
-    options.host +
-    options.authHost +
-    options.tenantId +
-    options.clientId +
-    options.clientSecret
+  options.host +
+  options.authHost +
+  options.tenantId +
+  options.clientId +
+  options.clientSecret;
 
 function getAuthToken(options, callback) {
-  let cacheKey = getTokenCacheKey(options);
-  let token = tokenCache.get(cacheKey);
+  let tokenCacheKey = getTokenCacheKey(options);
+  let token = cache.get(tokenCacheKey);
 
   if (token) {
     callback(null, token);
@@ -138,34 +138,28 @@ function getAuthToken(options, callback) {
 
   let hostUrl = url.parse(options.host);
 
-  request(
-    {
-      url: `${options.authHost}/${options.tenantId}/tokens/OAuth/2`,
-      formData: {
-        grant_type: "client_credentials",
-        client_id: `${options.clientId}@${options.tenantId}`,
-        client_secret: options.clientSecret,
-        resource: `00000003-0000-0ff1-ce00-000000000000/${hostUrl.host}@${options.tenantId}`
-      },
-      json: true,
-      method: "POST"
+  request({
+    url: `${options.authHost}/${options.tenantId}/tokens/OAuth/2`,
+    formData: {
+      grant_type: "client_credentials",
+      client_id: `${options.clientId}@${options.tenantId}`,
+      client_secret: options.clientSecret,
+      resource: `00000003-0000-0ff1-ce00-000000000000/${hostUrl.host}@${options.tenantId}`
     },
-    (err, resp, body) => {
-      if (err) {
-        callback(err);
-        return;
-      }
+    json: true,
+    method: "POST"
+  },(err, resp, body) => {
+    if (err) return callback(err);
 
-      if (resp.statusCode != 200) {
-        callback({ err: new Error("status code was not 200"), body: body });
-        return;
-      }
-
-      tokenCache.set(cacheKey, body.access_token);
-
-      callback(null, body.access_token);
+    if (resp.statusCode !== 200) {
+      callback({ err: new Error("status code was not 200"), body: body });
+      return;
     }
-  );
+
+    cache.set(tokenCacheKey, body.access_token);
+
+    callback(null, body.access_token);
+  });
 }
 
 function querySharepoint(entity, token, options, callback) {
@@ -185,15 +179,32 @@ function querySharepoint(entity, token, options, callback) {
     Authorization: "Bearer " + token
   };
 
-  request(requestOptions, (err, resp, body) => {
-    if (err || resp.statusCode != 200) {
-      callback(err || new Error("status code was " + resp.statusCode));
-      return;
-    }
-    Logger.trace({ headers: resp.headers }, "Results of Sharepoint qeury headers");
+  const requestSharepoint = () => {
+    const sharepointRetryDateTime = cache.getTtl("sharepointIsThrottled");
 
-    callback(null, body);
-  });
+    if (sharepointRetryDateTime) {
+      const waitTime = (sharepointRetryDateTime - Date.now());
+      return setTimeout(requestSharepoint, waitTime);
+    }
+
+    request(requestOptions, (err, { statusCode, headers }, body) => {
+      if (err) return callback(err);
+      const retryAfter = headers["Retry-After"];
+      if (statusCode === 200) {
+        Logger.trace({ headers }, "Results of Sharepoint qeury headers");
+
+        callback(null, body);
+      } else if ((statusCode === 429 || statusCode === 503) && retryAfter) {
+        cache.set("sharepointIsThrottled", true, retryAfter);
+
+        setTimeout(requestSharepoint, retryAfter * 1000);
+      } else {
+        callback(new Error("status code was " + statusCode));
+      }
+    });
+  }
+
+  requestSharepoint();
 }
 
 function doLookup(entities, options, callback) {
@@ -203,8 +214,6 @@ function doLookup(entities, options, callback) {
 
   _setupRegexBlacklists(options);
 
-  let results = [];
-
   getAuthToken(options, (err, token) => {
     if (err) {
       Logger.error("get token errored", err);
@@ -212,11 +221,11 @@ function doLookup(entities, options, callback) {
       return;
     }
 
-    // We have to do 1 request per query because we can only AND the query
-    // params not OR them
     const requestQueue = entities.reduce((requestQueue, entity) => {
       if (_isEntityBlacklisted(entity)) return requestQueue;
-
+      
+      // We have to do 1 request per query because we can only AND the query
+      // params not OR them
       return requestQueue.concat((done) =>
         querySharepoint(entity, token, options, (err, body) => {
           if (err) return done(err);
