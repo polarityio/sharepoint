@@ -167,11 +167,15 @@ function querySharepoint(entity, token, options, callback) {
 
   if (options.subsite) {
     requestOptions.qs = {
-      querytext: `'path:${options.host}/${options.subsite} ${entity.value}'`
+      querytext: options.directSearch 
+        ? `'path:${options.host}/${options.subsite} "${entity.value}"'` 
+        : `'path:${options.host}/${options.subsite} ${entity.value}'`
     };
   } else {
     requestOptions.qs = {
-      querytext: `'${entity.value}'`
+      querytext: options.directSearch 
+        ? `'"${entity.value}"'` 
+        : `'${entity.value}'`
     };
   }
   requestOptions.url = `${options.host}/_api/search/query`;

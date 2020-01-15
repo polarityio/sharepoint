@@ -174,6 +174,16 @@ module.exports = {
             type: 'text',
             userCanEdit: false,
             adminOnly: false
+        },
+        {
+            key: 'directSearch',
+            name: 'Direct Search',
+            description:
+                'Check if you want each Sharepoint search to be an exact match with found entities',
+            default: false,
+            type: 'boolean',
+            userCanEdit: false,
+            adminOnly: false
         }
     ]
 };
