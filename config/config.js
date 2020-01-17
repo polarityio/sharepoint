@@ -23,7 +23,7 @@ module.exports = {
      * @optional
      */
     description: "Polarity Sharepoint integration",
-    entityTypes: ['ip', 'hash', 'domain'],
+    entityTypes: ['ip', 'hash', 'domain', 'string'],
     /**
      * An array of style files (css or less) that will be included for your integration. Any styles specified in
      * the below files can be used in your custom template.
@@ -172,6 +172,16 @@ module.exports = {
                 'IPs that match the given regex will not be looked up (if blank, no IPs will be black listed)',
             default: '',
             type: 'text',
+            userCanEdit: false,
+            adminOnly: false
+        },
+        {
+            key: 'directSearch',
+            name: 'Direct Search',
+            description:
+                'Check if you want each Sharepoint search to be an exact match with found entities',
+            default: false,
+            type: 'boolean',
             userCanEdit: false,
             adminOnly: false
         }
