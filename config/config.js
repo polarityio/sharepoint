@@ -147,8 +147,8 @@ module.exports = {
             adminOnly: true
         },
         {
-            key: 'blacklist',
-            name: 'Blacklist Domains',
+            key: 'blocklist',
+            name: ' Ignore Entities',
             description: 'Comma delimited list of domains that you do not want to lookup.',
             default: '',
             type: 'text',
@@ -156,23 +156,23 @@ module.exports = {
             adminOnly: false
         },
         {
-            key: 'domainBlacklistRegex',
-            name: 'Domain Black List Regex',
+            key: 'domainBlocklistRegex',
+            name: 'Ignore Domain Regex',
             description:
-                'Domains that match the given regex will not be looked up (if blank, no domains will be black listed)',
+                'Domains that match the given regex will not be looked up.',
             default: '',
             type: 'text',
-            userCanEdit: false,
+            userCanEdit: true,
             adminOnly: false
         },
         {
-            key: 'ipBlacklistRegex',
-            name: 'IP Black List Regex',
+            key: 'ipBlocklistRegex',
+            name: 'Ignore IP Regex',
             description:
-                'IPs that match the given regex will not be looked up (if blank, no IPs will be black listed)',
+                'IPs that match the given regex will not be looked up.',
             default: '',
             type: 'text',
-            userCanEdit: false,
+            userCanEdit: true,
             adminOnly: false
         },
         {
@@ -182,7 +182,7 @@ module.exports = {
                 'Check if you want each Sharepoint search to be an exact match with found entities',
             default: false,
             type: 'boolean',
-            userCanEdit: false,
+            userCanEdit: true,
             adminOnly: false
         }
     ]
