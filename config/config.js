@@ -162,7 +162,7 @@ module.exports = {
                 'Domains that match the given regex will not be looked up.',
             default: '',
             type: 'text',
-            userCanEdit: true,
+            userCanEdit: false,
             adminOnly: false
         },
         {
@@ -172,7 +172,7 @@ module.exports = {
                 'IPs that match the given regex will not be looked up.',
             default: '',
             type: 'text',
-            userCanEdit: true,
+            userCanEdit: false,
             adminOnly: false
         },
         {
@@ -182,8 +182,8 @@ module.exports = {
                 'Check if you want each Sharepoint search to be an exact match with found entities',
             default: false,
             type: 'boolean',
-            userCanEdit: true,
-            adminOnly: false
+            userCanEdit: false,
+            adminOnly: true
         }
     ]
 };
