@@ -35,17 +35,17 @@ The Tenant ID of the Sharepoint instance.
 
 Limit search to only a subsite.  This field should be only the subsite name, _not_ the full path.  This field is optional and can be left blank.
 
-### Blacklist Domains
+### Ingore List
 
 Comma delimited list of domains that you do not want to lookup.
 
-### Domain Black List Regex
+### Ignore Domain Regex
 
-Domains that match the given regex will not be looked up (if blank, no domains will be black listed).
+Domains that match the given regex will not be looked up..
 
-### IP Black List Regex
+### Ignore IP Regex
 
-IPs that match the given regex will not be looked up (if blank, no IPs will be black listed).
+IPs that match the given regex will not be looked up.
 
 ## Polarity
 

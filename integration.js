@@ -12,87 +12,87 @@ const MAX_PARALLEL_LOOKUPS = 10;
 let Logger;
 let requestOptions = {};
 
-let domainBlackList = [];
-let previousDomainBlackListAsString = "";
+let domainBlockList = [];
+let previousDomainBlockListAsString = "";
 let previousDomainRegexAsString = "";
 let previousIpRegexAsString = "";
-let domainBlacklistRegex = null;
-let ipBlacklistRegex = null;
+let domainBlocklistRegex = null;
+let ipBlocklistRegex = null;
 
-function _setupRegexBlacklists(options) {
+function _setupRegexBlocklists(options) {
   if (
-    options.domainBlacklistRegex !== previousDomainRegexAsString &&
-    options.domainBlacklistRegex.length === 0
+    options.domainBlocklistRegex !== previousDomainRegexAsString &&
+    options.domainBlocklistRegex.length === 0
   ) {
-    Logger.debug("Removing Domain Blacklist Regex Filtering");
+    Logger.debug("Removing Domain Blocklist Regex Filtering");
     previousDomainRegexAsString = "";
-    domainBlacklistRegex = null;
+    domainBlocklistRegex = null;
   } else {
-    if (options.domainBlacklistRegex !== previousDomainRegexAsString) {
-      previousDomainRegexAsString = options.domainBlacklistRegex;
+    if (options.domainBlocklistRegex !== previousDomainRegexAsString) {
+      previousDomainRegexAsString = options.domainBlocklistRegex;
       Logger.debug(
-        { domainBlacklistRegex: previousDomainRegexAsString },
-        "Modifying Domain Blacklist Regex"
+        { domainBlocklistRegex: previousDomainRegexAsString },
+        "Modifying Domain Blocklist Regex"
       );
-      domainBlacklistRegex = new RegExp(options.domainBlacklistRegex, "i");
+      domainBlocklistRegex = new RegExp(options.domainBlocklistRegex, "i");
     }
   }
 
   if (
-    options.blacklist !== previousDomainBlackListAsString &&
-    options.blacklist.length === 0
+    options.blocklist !== previousDomainBlockListAsString &&
+    options.blocklist.length === 0
   ) {
-    Logger.debug("Removing Domain Blacklist Filtering");
-    previousDomainBlackListAsString = "";
-    domainBlackList = null;
+    Logger.debug("Removing Domain Blocklist Filtering");
+    previousDomainBlockListAsString = "";
+    domainBlockList = null;
   } else {
-    if (options.blacklist !== previousDomainBlackListAsString) {
-      previousDomainBlackListAsString = options.blacklist;
+    if (options.blocklist !== previousDomainBlockListAsString) {
+      previousDomainBlockListAsString = options.blocklist;
       Logger.debug(
-        { domainBlacklist: previousDomainBlackListAsString },
-        "Modifying Domain Blacklist Regex"
+        { domainBlocklist: previousDomainBlockListAsString },
+        "Modifying Domain Blocklist Regex"
       );
-      domainBlackList = options.blacklist.split(",").map((item) => item.trim());
+      domainBlockList = options.blocklist.split(",").map((item) => item.trim());
     }
   }
 
   if (
-    options.ipBlacklistRegex !== previousIpRegexAsString &&
-    options.ipBlacklistRegex.length === 0
+    options.ipBlocklistRegex !== previousIpRegexAsString &&
+    options.ipBlocklistRegex.length === 0
   ) {
-    Logger.debug("Removing IP Blacklist Regex Filtering");
+    Logger.debug("Removing IP Blocklist Regex Filtering");
     previousIpRegexAsString = "";
-    ipBlacklistRegex = null;
+    ipBlocklistRegex = null;
   } else {
-    if (options.ipBlacklistRegex !== previousIpRegexAsString) {
-      previousIpRegexAsString = options.ipBlacklistRegex;
+    if (options.ipBlocklistRegex !== previousIpRegexAsString) {
+      previousIpRegexAsString = options.ipBlocklistRegex;
       Logger.debug(
-        { ipBlacklistRegex: previousIpRegexAsString },
-        "Modifying IP Blacklist Regex"
+        { ipBlocklistRegex: previousIpRegexAsString },
+        "Modifying IP Blocklist Regex"
       );
-      ipBlacklistRegex = new RegExp(options.ipBlacklistRegex, "i");
+      ipBlocklistRegex = new RegExp(options.ipBlocklistRegex, "i");
     }
   }
 }
 
-function _isEntityBlacklisted(entityObj, options) {
-  if (domainBlackList.indexOf(entityObj.value) >= 0) {
+function _isEntityBlocklisted(entityObj, options) {
+  if (domainBlockList.indexOf(entityObj.value) >= 0) {
     return true;
   }
 
   if (entityObj.isIPv4 && !entityObj.isPrivateIP) {
-    if (ipBlacklistRegex !== null) {
-      if (ipBlacklistRegex.test(entityObj.value)) {
-        Logger.debug({ ip: entityObj.value }, "Blocked BlackListed IP Lookup");
+    if (ipBlocklistRegex !== null) {
+      if (ipBlocklistRegex.test(entityObj.value)) {
+        Logger.debug({ ip: entityObj.value }, "Blocked BlockListed IP Lookup");
         return true;
       }
     }
   }
 
   if (entityObj.isDomain) {
-    if (domainBlacklistRegex !== null) {
-      if (domainBlacklistRegex.test(entityObj.value)) {
-        Logger.debug({ domain: entityObj.value }, "Blocked BlackListed Domain Lookup");
+    if (domainBlocklistRegex !== null) {
+      if (domainBlocklistRegex.test(entityObj.value)) {
+        Logger.debug({ domain: entityObj.value }, "Blocked BlockListed Domain Lookup");
         return true;
       }
     }
@@ -216,7 +216,7 @@ function doLookup(entities, options, callback) {
 
   Logger.trace("options are", options);
 
-  _setupRegexBlacklists(options);
+  _setupRegexBlocklists(options);
 
   getAuthToken(options, (err, token) => {
     if (err) {
@@ -226,7 +226,7 @@ function doLookup(entities, options, callback) {
     }
 
     const requestQueue = entities.reduce((requestQueue, entity) => {
-      if (_isEntityBlacklisted(entity)) return requestQueue;
+      if (_isEntityBlocklisted(entity)) return requestQueue;
       
       // We have to do 1 request per query because we can only AND the query
       // params not OR them
