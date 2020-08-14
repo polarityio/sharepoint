@@ -31,7 +31,7 @@ module.exports = {
      * @type Array
      * @optional
      */
-    "styles": [
+    styles: [
         "./styles/sharepoint.less"
     ],
     /**
