@@ -4,7 +4,10 @@
       <hr>
     {{/if}}
     <div>
-        <div class="p-title">{{fa-icon icon=document._icon fixedWidth=true}}<a class="p-link" title="Open in SharePoint" href="{{document.Path}}">{{document.Title}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></div>
+        <div class="p-title">{{fa-icon icon=document._icon fixedWidth=true}}{{document.Title}}</div>
+        <div>
+          <a class="p-link" title="Download file from SharePoint" href="{{document.Path}}">Download {{fa-icon icon="download" fixedWidth=true class="external-link-icon"}}</a>
+        </div>
         <div>
             <span class="p-key">Author: </span>
             <span class="p-value">{{document.Author}}</span>
@@ -18,6 +21,10 @@
         <div>
             <span class="p-key">Size: </span>
             <span class="p-value">{{document._sizeHumanReadable}}</span>
+        </div>
+        <div>
+          <span class="p-key">Folder: </span>
+          <span class="p-value"><a class="p-link" title="Open in SharePoint" href="{{document.ParentLink}}">{{document._containingFolder}}{{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a></span>
         </div>
         <div>
             <span class="p-key">Last Modified: </span>
