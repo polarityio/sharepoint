@@ -1,14 +1,15 @@
 {
   "main": "./integration.js",
   "name": "sharepoint",
-  "version": "3.1.1",
+  "version": "3.2.0",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
     "async": "^3.2",
     "node-cache": "^5.1.2",
-    "request": "^2.88.2"
+    "request": "^2.88.2",
+    "xbytes": "^1.7.0"
   },
   "scripts": {
     "test": "./node_modules/.bin/mocha --recursive",
