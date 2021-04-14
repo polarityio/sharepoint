@@ -101,7 +101,7 @@ function _isEntityBlocklisted(entityObj, options) {
   return false;
 }
 
-function formatSearchResults(searchResults) {
+function formatSearchResults(searchResults, options) {
   let data = [];
 
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
@@ -122,6 +122,10 @@ function formatSearchResults(searchResults) {
 
       if(cell.Key === 'Size'){
         obj._sizeHumanReadable = xbytes(cell.Value);
+      }
+
+      if(cell.Key === 'ParentLink'){
+        obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
       }
     });
 
@@ -250,7 +254,7 @@ function doLookup(entities, options, callback) {
 
           if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
 
-          let details = formatSearchResults(body);
+          let details = formatSearchResults(body, options);
           let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
 
           done(null, {
