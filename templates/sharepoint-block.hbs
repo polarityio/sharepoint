@@ -1,28 +1,38 @@
 <div>
-    {{#each block.data.details as |detail|}}
+    {{#each block.data.details as |document index|}}
+    {{#if (gt index 0)}}
+      <hr>
+    {{/if}}
     <div>
-        <div class="p-title">{{detail.Title}}</div>
-        <a class="p-link" href="{{detail.Path}}">(View in Sharepoint)</a>
-
+        <div class="p-title">{{fa-icon icon=document._icon fixedWidth=true}}<a class="p-link" title="Open in SharePoint" href="{{document.Path}}">{{document.Title}} {{fa-icon "external-link-square" class="external-link-icon"}}</a></div>
         <div>
             <span class="p-key">Author: </span>
-            <span class="p-value">{{detail.Author}}</span>
+            <span class="p-value">{{document.Author}}</span>
         </div>
+        {{#if document.Description}}
+          <div>
+            <span class="p-key">Description: </span>
+            <span class="p-value">{{document.Description}}</span>
+          </div>
+        {{/if}}
         <div>
             <span class="p-key">Size: </span>
-            <span class="p-value">{{detail.Size}}</span>
+            <span class="p-value">{{document._sizeHumanReadable}}</span>
         </div>
         <div>
             <span class="p-key">Last Modified: </span>
-            <span class="p-value">{{detail.LastModifiedTime}}</span>
+            <span class="p-value">{{moment-format document.LastModifiedTime timeZone=timezone}}</span>
         </div>
         <div>
             <span class="p-key">File Type: </span>
-            <span class="p-value">{{detail.FileType}}</span>
+            <span class="p-value">{{document.FileType}}</span>
         </div>
+        {{#if document.HitHighlightedSummary}}
+          <div>
+            <span class="p-key">Search Highlight: </span>
+            <span class="p-block">{{{document.HitHighlightedSummary}}}</span>
+          </div>
+        {{/if}}
     </div>
-
-    <br />
-    <hr />
     {{/each}}
 </div>
