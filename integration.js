@@ -1,6 +1,6 @@
 const async = require('async');
 const config = require('./config/config');
-const request = require('request');
+const request = require('postman-request');
 const util = require('util');
 const url = require('url');
 const fs = require('fs');
