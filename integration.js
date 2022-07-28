@@ -107,7 +107,7 @@ function formatSearchResults(searchResults, options) {
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
     let obj = {};
     row.Cells.forEach((cell) => {
-      if (cell.Key === 'HitHighlightedSummary') {
+      if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
         cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
       }
 
