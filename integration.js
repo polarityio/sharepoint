@@ -209,9 +209,10 @@ function querySharepoint(entity, token, options, callback) {
 
     request(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
-      const retryAfter = headers['Retry-After'];
+
+      const retryAfter = headers['Retry-After'] || headers['retry-after'];
       if (statusCode === 200) {
-        Logger.trace({ headers }, 'Results of Sharepoint qeury headers');
+        Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
       } else if ((statusCode === 429 || statusCode === 503) && retryAfter) {
@@ -236,7 +237,7 @@ function doLookup(entities, options, callback) {
 
   getAuthToken(options, (err, token) => {
     if (err) {
-      Logger.error('get token errored', err);
+      Logger.error(err, 'Error fetching auth token');
       callback({ err: err });
       return;
     }
