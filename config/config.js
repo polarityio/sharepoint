@@ -25,7 +25,7 @@ module.exports = {
    * @optional
    */
   description: 'Polarity Sharepoint integration',
-  entityTypes: ['ip', 'hash', 'domain', 'string'],
+  entityTypes: ['ip', 'hash', 'domain', 'string', 'email'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
