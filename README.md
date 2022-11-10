@@ -10,9 +10,11 @@ Check out the integration in action:
 
 ## Configuring Sharepoint
 
+The Polarity-Sharepoint integration uses Sharepoint Addin Authentication via OAuth bearer tokens.  To setup the integration you register a new application with Sharepoint to generate the client id and client secret.  Once the application is registered you set the permissions.
+
 ### Register the App
 
-Navigate to https://[TENANT-NAME].sharepoint.com/_layouts/15/appregnew.aspx.  Click on "Generate" for the `Client ID` and record the value.
+Navigate to `https://[TENANT-NAME].sharepoint.com/_layouts/15/appregnew.aspx`.  Click on "Generate" for the `Client ID` and record the value.
 Click on generate for the `Client Secret` and record the value. 
 
 Fill in a `Title` such as "Polarity Sharepoint Integration".
@@ -23,7 +25,11 @@ Click Create.
 
 ### Give permissions
 
-Navigate to https://[TENANT-NAME]-admin.sharepoint.com/_layouts/15/appinv.aspx and fill in the `clientId` as the `App Id` and click on the "Lookup" button.
+Navigate to `https://[TENANT-NAME]-admin.sharepoint.com/_layouts/15/appinv.aspx`. 
+> Note that this will register the application at the tenant level which means the credentials can be used everywhere inside your tenant.
+
+Fill in the `clientId` as the `App Id` and click on the "Lookup" button.
+
 Once the inputs fill in with your app information provide the following permission.
 
 ```
@@ -32,17 +38,23 @@ Once the inputs fill in with your app information provide the following permissi
 </AppPermissionRequests>
 ```
 
-Click "Create"
+This will provide `READ` access to sites within your tenant.
+
+Click "Create" and then the "Trust It" button.
+
+### Finding your TenantId
+
+To find your TenantId navigate to the url `https://[TENANT-NAME].sharepoint.com/_layouts/appprincipals.aspx`.  When the page loads, in the right hand `App Identifier` column you will find a series of app ids.  The Tenant ID appears after the `@` sign and has the format `XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`.
 
 ## Sharepoint Integration Options
 
 ### Host
 
-The top level domain of the Sharepoint instance to use for queries.
+The sharepoint host to use for querying data.  This will typically look like `https://[TENANT-NAME].sharepoint.com`.
 
 ### Authentication Host
 
-The host to use for authenticating the user, usually this should be allowed to default.
+The authentication host to use for querying data.  This should usually be set to the default value of `https://accounts.accesscontrol.windows.net`.
 
 ### Client ID
 
@@ -54,19 +66,19 @@ The Client Secret associated with the Client ID.
 
 ### Tenant ID
 
-The Tenant ID of the Sharepoint instance.
+The Tenant ID to authenticate inside of.
 
 ### Subsite
 
 Limit search to only a subsite.  This field should be only the subsite name, _not_ the full path.  This field is optional and can be left blank.
 
-### Ingore List
+### Ignore Entities
 
-Comma delimited list of domains that you do not want to lookup.
+Comma delimited list of entities that you do not want to lookup.
 
 ### Ignore Domain Regex
 
-Domains that match the given regex will not be looked up..
+Domains that match the given regex will not be looked up.
 
 ### Ignore IP Regex
 

@@ -25,7 +25,7 @@ module.exports = {
    * @optional
    */
   description: 'Polarity Sharepoint integration',
-  entityTypes: ['ip', 'hash', 'domain', 'string'],
+  entityTypes: ['ip', 'hash', 'domain', 'string', 'email'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -67,7 +67,7 @@ module.exports = {
     // the url parameter (by embedding the auth info in the uri)
     proxy: '',
     /**
-     * If set to false, the integeration will ignore SSL errors.  This will allow the integration to connect
+     * If set to false, the integration will ignore SSL errors.  This will allow the integration to connect
      * to Sharepoint servers without valid SSL certificates.  Please note that we do NOT recommending setting this
      * to false in a production environment.
      */
@@ -95,7 +95,7 @@ module.exports = {
     {
       key: 'host',
       name: 'Host',
-      description: 'The sharepoint host to use for querying data.',
+      description: 'The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -104,7 +104,7 @@ module.exports = {
     {
       key: 'authHost',
       name: 'Authentication Host',
-      description: 'The authentication host to use for querying data.  This should usually be allowed to default.',
+      description: 'The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".',
       default: 'https://accounts.accesscontrol.windows.net',
       type: 'text',
       userCanEdit: false,
@@ -141,7 +141,7 @@ module.exports = {
       key: 'subsite',
       name: 'Subsite',
       description:
-        'Limit search to only a subsite (optional).  This field should be only the subsite name not the full path.',
+        'Limit search to only a subsite (optional).  This field should be only the subsite name and not the full path.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -150,7 +150,7 @@ module.exports = {
     {
       key: 'blocklist',
       name: 'Ignore Entities',
-      description: 'Comma delimited list of domains that you do not want to lookup.',
+      description: 'Comma delimited list of entities that you do not want to lookup.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -177,7 +177,7 @@ module.exports = {
     {
       key: 'directSearch',
       name: 'Direct Search',
-      description: 'Check if you want each Sharepoint search to be an exact match with found entities',
+      description: 'Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).',
       default: false,
       type: 'boolean',
       userCanEdit: false,

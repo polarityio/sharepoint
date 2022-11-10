@@ -1,18 +1,14 @@
 {
   "main": "./integration.js",
   "name": "sharepoint",
-  "version": "3.2.2",
+  "version": "3.3.0",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
-    "async": "^3.2",
+    "async": "^3.2.4",
     "node-cache": "^5.1.2",
-    "request": "^2.88.2",
-    "xbytes": "^1.7.0"
-  },
-  "scripts": {
-    "test": "./node_modules/.bin/mocha --recursive",
-    "dev": "./sync.js"
+    "postman-request": "^2.88.1-postman.31",
+    "xbytes": "^1.8.0"
   }
 }

@@ -1,6 +1,6 @@
 const async = require('async');
 const config = require('./config/config');
-const request = require('request');
+const request = require('postman-request');
 const util = require('util');
 const url = require('url');
 const fs = require('fs');
@@ -107,7 +107,7 @@ function formatSearchResults(searchResults, options) {
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
     let obj = {};
     row.Cells.forEach((cell) => {
-      if (cell.Key === 'HitHighlightedSummary') {
+      if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
         cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
       }
 
@@ -209,9 +209,10 @@ function querySharepoint(entity, token, options, callback) {
 
     request(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
-      const retryAfter = headers['Retry-After'];
+
+      const retryAfter = headers['Retry-After'] || headers['retry-after'];
       if (statusCode === 200) {
-        Logger.trace({ headers }, 'Results of Sharepoint qeury headers');
+        Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
       } else if ((statusCode === 429 || statusCode === 503) && retryAfter) {
@@ -236,7 +237,7 @@ function doLookup(entities, options, callback) {
 
   getAuthToken(options, (err, token) => {
     if (err) {
-      Logger.error('get token errored', err);
+      Logger.error(err, 'Error fetching auth token');
       callback({ err: err });
       return;
     }
