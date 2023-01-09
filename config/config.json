@@ -1,0 +1,127 @@
+{
+  "name": "Sharepoint",
+  "acronym": "SHP",
+  "default-color": "light-gray",
+  "onDemandOnly": true,
+  "description": "Polarity Sharepoint integration",
+  "entityTypes": [
+    "hash",
+    "domain",
+    "string",
+    "email"
+  ],
+  "styles": [
+    "./styles/sharepoint.less"
+  ],
+  "block": {
+    "component": {
+      "file": "./components/sharepoint-block.js"
+    },
+    "template": {
+      "file": "./templates/sharepoint-block.hbs"
+    }
+  },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
+  "options": [
+    {
+      "key": "host",
+      "name": "Host",
+      "description": "The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "authHost",
+      "name": "Authentication Host",
+      "description": "The authentication host to use for querying data.  This should usually be set to the default value of \"https://accounts.accesscontrol.windows.net\".",
+      "default": "https://accounts.accesscontrol.windows.net",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "clientId",
+      "name": "Client ID",
+      "description": "The client ID to use for authentication.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "clientSecret",
+      "name": "Client Secret",
+      "description": "The secret to use for authentication.",
+      "default": "",
+      "type": "password",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "tenantId",
+      "name": "Tenant ID",
+      "description": "The tenant id to authenticate inside of.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "subsite",
+      "name": "Subsite",
+      "description": "Limit search to only a subsite (optional).  This field should be only the subsite name and not the full path.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": true
+    },
+    {
+      "key": "blocklist",
+      "name": "Ignore Entities",
+      "description": "Comma delimited list of entities that you do not want to lookup.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "domainBlocklistRegex",
+      "name": "Ignore Domain Regex",
+      "description": "Domains that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "ipBlocklistRegex",
+      "name": "Ignore IP Regex",
+      "description": "IPs that match the given regex will not be looked up.",
+      "default": "",
+      "type": "text",
+      "userCanEdit": false,
+      "adminOnly": false
+    },
+    {
+      "key": "directSearch",
+      "name": "Direct Search",
+      "description": "Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).",
+      "default": false,
+      "type": "boolean",
+      "userCanEdit": false,
+      "adminOnly": true
+    }
+  ]
+}
