@@ -1,7 +1,7 @@
 {
-  "main": "./integration.js",
   "name": "sharepoint",
-  "version": "3.3.0",
+  "version": "3.3.1",
+  "main": "./integration.js",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
