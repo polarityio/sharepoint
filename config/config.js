@@ -16,7 +16,7 @@ module.exports = {
    * @required
    */
   acronym: 'SHP',
-  'default-color': 'light-gray',
+  defaultColor: 'light-gray',
   onDemandOnly: true,
   /**
    * Description for this integration which is displayed in the Polarity integrations user interface
@@ -95,7 +95,8 @@ module.exports = {
     {
       key: 'host',
       name: 'Host',
-      description: 'The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.',
+      description:
+        'The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -104,7 +105,8 @@ module.exports = {
     {
       key: 'authHost',
       name: 'Authentication Host',
-      description: 'The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".',
+      description:
+        'The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".',
       default: 'https://accounts.accesscontrol.windows.net',
       type: 'text',
       userCanEdit: false,
@@ -177,7 +179,8 @@ module.exports = {
     {
       key: 'directSearch',
       name: 'Direct Search',
-      description: 'Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).',
+      description:
+        'Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).',
       default: false,
       type: 'boolean',
       userCanEdit: false,

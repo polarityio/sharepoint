@@ -1,18 +1,11 @@
 {
   "name": "Sharepoint",
   "acronym": "SHP",
-  "default-color": "light-gray",
+  "defaultColor": "light-gray",
   "onDemandOnly": true,
   "description": "Polarity Sharepoint integration",
-  "entityTypes": [
-    "hash",
-    "domain",
-    "string",
-    "email"
-  ],
-  "styles": [
-    "./styles/sharepoint.less"
-  ],
+  "entityTypes": ["hash", "domain", "string", "email"],
+  "styles": ["./styles/sharepoint.less"],
   "block": {
     "component": {
       "file": "./components/sharepoint-block.js"
