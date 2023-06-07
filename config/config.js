@@ -143,9 +143,19 @@ module.exports = {
       key: 'subsite',
       name: 'Subsite',
       description:
-        'Limit search to only a subsite (optional).  This field should be only the subsite name and not the full path.',
+        'Limit search to only a subsite (optional)',
       default: '',
       type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'expandSubsiteSearch',
+      name: 'Expand Subsite Search',
+      description:
+        'Is your search showing results for your Subsite when the option is empty, but not when you add your Subsite?  If so, enable this option to fix the issue.',
+      default: false,
+      type: 'boolean',
       userCanEdit: false,
       adminOnly: true
     },

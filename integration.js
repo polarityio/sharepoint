@@ -106,30 +106,43 @@ function formatSearchResults(searchResults, options) {
 
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
     let obj = {};
-    row.Cells.forEach((cell) => {
-      if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
-        cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
-      }
 
-      obj[cell.Key] = cell.Value;
-      if (cell.Key === 'FileType') {
-        if (fileTypes[cell.Value]) {
-          obj._icon = fileTypes[cell.Value];
-        } else {
-          obj._icon = 'file';
+    let isSubsiteRow = false;
+    if (options.expandSubsiteSearch) {
+      isSubsiteRow = row.Cells.some(
+        (cell) =>
+          cell.Key === 'ParentLink' &&
+          decodeURIComponent(url.parse(cell.Value).pathname).startsWith(
+            `${options.subsite.startsWith('/') ? '' : '/'}${options.subsite}`
+          )
+      );
+    }
+    if ((options.expandSubsiteSearch && isSubsiteRow) || !options.expandSubsiteSearch) {
+      row.Cells.forEach((cell) => {
+        if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
+          cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
         }
-      }
 
-      if(cell.Key === 'Size'){
-        obj._sizeHumanReadable = xbytes(cell.Value);
-      }
+        obj[cell.Key] = cell.Value;
+        if (cell.Key === 'FileType') {
+          if (fileTypes[cell.Value]) {
+            obj._icon = fileTypes[cell.Value];
+          } else {
+            obj._icon = 'file';
+          }
+        }
 
-      if(cell.Key === 'ParentLink'){
-        obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
-      }
-    });
+        if (cell.Key === 'Size') {
+          obj._sizeHumanReadable = xbytes(cell.Value);
+        }
 
-    data.push(obj);
+        if (cell.Key === 'ParentLink') {
+          obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+        }
+      });
+
+      if (data.length <= 10) data.push(obj);
+    }
   });
 
   return data;
@@ -181,32 +194,28 @@ function getAuthToken(options, callback) {
 }
 
 function querySharepoint(entity, token, options, callback) {
-  let requestOptions = getRequestOptions();
-
-  if (options.subsite) {
-    requestOptions.qs = {
-      querytext: options.directSearch
-        ? `'path:${options.host}/${options.subsite} "${entity.value}"'`
-        : `'path:${options.host}/${options.subsite} ${entity.value}'`
-    };
+  let querytext;
+  if (options.subsite && !options.expandSubsiteSearch) {
+    querytext = `'path:${options.host}${options.subsite.startsWith('/') ? '' : '/'}${options.subsite} ${
+      options.directSearch ? `"${entity.value}"` : entity.value
+    }'`;
   } else {
-    requestOptions.qs = {
-      querytext: options.directSearch ? `'"${entity.value}"'` : `'${entity.value}'`
-    };
+    querytext = options.directSearch ? `'"${entity.value}"'` : `'${entity.value}'`;
   }
-  requestOptions.url = `${options.host}/_api/search/query`;
-  requestOptions.headers = {
-    Authorization: 'Bearer ' + token
-  };
 
-  const requestSharepoint = () => {
-    const sharepointRetryDateTime = cache.getTtl('sharepointIsThrottled');
-
-    if (sharepointRetryDateTime) {
-      const waitTime = sharepointRetryDateTime - Date.now();
-      return setTimeout(requestSharepoint, waitTime);
+  const requestOptions = {
+    ...getRequestOptions(),
+    url: `${options.host}/_api/search/query`,
+    qs: {
+      querytext,
+      RowLimit: options.expandSubsiteSearch ? 50 : 10
+    },
+    headers: {
+      Authorization: 'Bearer ' + token
     }
-
+  };
+  let totalRetriesLeft = 4;
+  const requestSharepoint = () => {
     request(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
 
@@ -215,10 +224,9 @@ function querySharepoint(entity, token, options, callback) {
         Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
-      } else if ((statusCode === 429 || statusCode === 503) && retryAfter) {
-        cache.set('sharepointIsThrottled', true, retryAfter);
-
-        setTimeout(requestSharepoint, retryAfter * 1000);
+      } else if ([429, 500, 503].includes(statusCode) && totalRetriesLeft) {
+        totalRetriesLeft--;
+        setTimeout(requestSharepoint, retryAfter * 1000 || 1000);
       } else {
         callback(new Error('status code was ' + statusCode));
       }
@@ -230,6 +238,8 @@ function querySharepoint(entity, token, options, callback) {
 
 function doLookup(entities, options, callback) {
   Logger.trace('starting lookup');
+
+  options.subsite = options.subsite.endsWith('/') ? options.subsite.slice(1) : options.subsite;
 
   Logger.trace('options are', options);
 
@@ -336,7 +346,15 @@ function validateOptions(options, callback) {
   validateStringOption(errors, options, 'clientSecret', 'You must provide a Client Secret option.');
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
 
-  callback(null, errors);
+  const subsiteStartWithError =
+    options.subsite.value && options.subsite.value.startsWith('//')
+      ? {
+          key: 'subsite',
+          message: 'Your subsite must not start with a //'
+        }
+      : [];
+
+  callback(null, errors.concat(subsiteStartWithError));
 }
 
 module.exports = {

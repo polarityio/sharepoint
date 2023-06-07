@@ -49,40 +49,37 @@ To find your TenantId navigate to the url `https://[TENANT-NAME].sharepoint.com/
 ## Sharepoint Integration Options
 
 ### Host
-
-The sharepoint host to use for querying data.  This will typically look like `https://[TENANT-NAME].sharepoint.com`.
+The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.
 
 ### Authentication Host
-
-The authentication host to use for querying data.  This should usually be set to the default value of `https://accounts.accesscontrol.windows.net`.
+The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".
 
 ### Client ID
-
-The Client ID to use for authentication.
+The client ID to use for authentication.
 
 ### Client Secret
-
-The Client Secret associated with the Client ID.
+The secret to use for authentication.
 
 ### Tenant ID
-
-The Tenant ID to authenticate inside of.
+The tenant id to authenticate inside of.
 
 ### Subsite
+Limit search to only a subsite (optional)
 
-Limit search to only a subsite.  This field should be only the subsite name, _not_ the full path.  This field is optional and can be left blank.
+### Expand Subsite Search
+Is your search showing results for your Subsite when the option is empty, but not when you add your Subsite?  If so, enable this option to fix the issue.
 
 ### Ignore Entities
-
 Comma delimited list of entities that you do not want to lookup.
 
 ### Ignore Domain Regex
-
 Domains that match the given regex will not be looked up.
 
 ### Ignore IP Regex
-
 IPs that match the given regex will not be looked up.
+
+### Direct Search
+Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).
 
 ## Polarity
 
