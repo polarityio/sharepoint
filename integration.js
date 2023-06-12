@@ -210,7 +210,7 @@ function querySharepoint(entity, token, options, callback) {
     url: `${options.host}/_api/search/query`,
     qs: {
       querytext,
-      RowLimit: options.expandSubsiteSearch ? 50 : 10
+      RowLimit: options.expandSubsiteSearch ? 500 : 10
     },
     headers: {
       Authorization: 'Bearer ' + token
