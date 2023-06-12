@@ -69,7 +69,7 @@ Limit search to only a subsite (optional)
 ### Expand Subsite Search
 Is your search showing results for your Subsite when the option is empty, but not when you add your Subsite?  If so, enable this option to fix the issue.
 
-> ***NOTE:*** This option does and expanded search then later filters out all of the subsites not specified in the `Subsite` user option.  This has the potential for false misses, and slowing down query times as well.
+> ***NOTE:*** This option does an expanded search then later filters out all of the subsites not specified in the `Subsite` user option.  This has the potential for missing results and slowing down query times.
 
 
 ### Ignore Entities

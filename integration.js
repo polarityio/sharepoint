@@ -263,6 +263,7 @@ function doLookup(entities, options, callback) {
           if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
 
           let details = formatSearchResults(body, options);
+          if (details.length < 1) return done(null, { entity, data: null });
           let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
 
           done(null, {
