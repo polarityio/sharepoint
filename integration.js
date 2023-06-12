@@ -124,20 +124,22 @@ function formatSearchResults(searchResults, options) {
         }
 
         obj[cell.Key] = cell.Value;
-        if (cell.Key === 'FileType') {
-          if (fileTypes[cell.Value]) {
-            obj._icon = fileTypes[cell.Value];
-          } else {
-            obj._icon = 'file';
+        if (cell.Value) {
+          if (cell.Key === 'FileType') {
+            if (fileTypes[cell.Value]) {
+              obj._icon = fileTypes[cell.Value];
+            } else {
+              obj._icon = 'file';
+            }
           }
-        }
-
-        if (cell.Key === 'Size') {
-          obj._sizeHumanReadable = xbytes(cell.Value);
-        }
-
-        if (cell.Key === 'ParentLink') {
-          obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+  
+          if (cell.Key === 'Size') {
+            obj._sizeHumanReadable = xbytes(cell.Value);
+          }
+  
+          if (cell.Key === 'ParentLink') {
+            obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+          }
         }
       });
 
@@ -239,7 +241,7 @@ function querySharepoint(entity, token, options, callback) {
 function doLookup(entities, options, callback) {
   Logger.trace('starting lookup');
 
-  options.subsite = options.subsite.endsWith('/') ? options.subsite.slice(1) : options.subsite;
+  options.subsite = options.subsite.startsWith('/') ? options.subsite.slice(1) : options.subsite;
 
   Logger.trace('options are', options);
 
