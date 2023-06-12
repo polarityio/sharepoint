@@ -5,14 +5,35 @@
   "defaultColor": "light-gray",
   "onDemandOnly": true,
   "description": "Polarity Sharepoint integration",
-  "entityTypes": ["ip", "hash", "domain", "string", "email"],
-  "styles": ["./styles/sharepoint.less"],
+  "entityTypes": [
+    "IP",
+    "hash",
+    "domain",
+    "string",
+    "email"
+  ],
+  "styles": [
+    "./styles/sharepoint.less"
+  ],
   "block": {
-    "component": { "file": "./components/sharepoint-block.js" },
-    "template": { "file": "./templates/sharepoint-block.hbs" }
+    "component": {
+      "file": "./components/sharepoint-block.js"
+    },
+    "template": {
+      "file": "./templates/sharepoint-block.hbs"
+    }
   },
-  "request": { "cert": "", "key": "", "passphrase": "", "ca": "", "proxy": "", "rejectUnauthorized": true },
-  "logging": { "level": "info" },
+  "request": {
+    "cert": "",
+    "key": "",
+    "passphrase": "",
+    "ca": "",
+    "proxy": "",
+    "rejectUnauthorized": true
+  },
+  "logging": {
+    "level": "info"
+  },
   "options": [
     {
       "key": "host",
