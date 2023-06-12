@@ -28,7 +28,7 @@ const fileTypes = {
 
 const MAX_PARALLEL_LOOKUPS = 10;
 let Logger;
-let requestOptions = {};
+let requestWithDefaults = {};
 
 let domainBlockList = [];
 let previousDomainBlockListAsString = '';
@@ -132,11 +132,11 @@ function formatSearchResults(searchResults, options) {
               obj._icon = 'file';
             }
           }
-  
+
           if (cell.Key === 'Size') {
             obj._sizeHumanReadable = xbytes(cell.Value);
           }
-  
+
           if (cell.Key === 'ParentLink') {
             obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
           }
@@ -148,10 +148,6 @@ function formatSearchResults(searchResults, options) {
   });
 
   return data;
-}
-
-function getRequestOptions() {
-  return JSON.parse(JSON.stringify(requestOptions));
 }
 
 const getTokenCacheKey = (options) =>
@@ -168,7 +164,7 @@ function getAuthToken(options, callback) {
 
   let hostUrl = url.parse(options.host);
 
-  request(
+  requestWithDefaults(
     {
       url: `${options.authHost}/${options.tenantId}/tokens/OAuth/2`,
       formData: {
@@ -206,7 +202,6 @@ function querySharepoint(entity, token, options, callback) {
   }
 
   const requestOptions = {
-    ...getRequestOptions(),
     url: `${options.host}/_api/search/query`,
     qs: {
       querytext,
@@ -218,7 +213,7 @@ function querySharepoint(entity, token, options, callback) {
   };
   let totalRetriesLeft = 4;
   const requestSharepoint = () => {
-    request(requestOptions, (err, { statusCode, headers }, body) => {
+    requestWithDefaults(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
 
       const retryAfter = headers['Retry-After'] || headers['retry-after'];
@@ -243,7 +238,7 @@ function doLookup(entities, options, callback) {
 
   options.subsite = options.subsite.startsWith('/') ? options.subsite.slice(1) : options.subsite;
 
-  Logger.trace('options are', options);
+  Logger.trace({ options }, 'doLookup options');
 
   _setupRegexBlocklists(options);
 
@@ -299,32 +294,35 @@ function doLookup(entities, options, callback) {
 
 function startup(logger) {
   Logger = logger;
+  let defaults = {};
 
   if (typeof config.request.cert === 'string' && config.request.cert.length > 0) {
-    requestOptions.cert = fs.readFileSync(config.request.cert);
+    defaults.cert = fs.readFileSync(config.request.cert);
   }
 
   if (typeof config.request.key === 'string' && config.request.key.length > 0) {
-    requestOptions.key = fs.readFileSync(config.request.key);
+    defaults.key = fs.readFileSync(config.request.key);
   }
 
   if (typeof config.request.passphrase === 'string' && config.request.passphrase.length > 0) {
-    requestOptions.passphrase = config.request.passphrase;
+    defaults.passphrase = config.request.passphrase;
   }
 
   if (typeof config.request.ca === 'string' && config.request.ca.length > 0) {
-    requestOptions.ca = fs.readFileSync(config.request.ca);
+    defaults.ca = fs.readFileSync(config.request.ca);
   }
 
   if (typeof config.request.proxy === 'string' && config.request.proxy.length > 0) {
-    requestOptions.proxy = config.request.proxy;
+    defaults.proxy = config.request.proxy;
   }
 
   if (typeof config.request.rejectUnauthorized === 'boolean') {
-    requestOptions.rejectUnauthorized = config.request.rejectUnauthorized;
+    defaults.rejectUnauthorized = config.request.rejectUnauthorized;
   }
 
-  requestOptions.json = true;
+  defaults.json = true;
+
+  requestWithDefaults = request.defaults(defaults);
 }
 
 function validateStringOption(errors, options, optionName, errMessage) {
