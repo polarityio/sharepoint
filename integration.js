@@ -111,7 +111,7 @@ function formatSearchResults(searchResults, options) {
     if (options.expandSubsiteSearch) {
       isSubsiteRow = row.Cells.some(
         (cell) =>
-          cell.Key === 'ParentLink' &&
+          cell.Key === 'ParentLink' && cell.Value &&
           decodeURIComponent(url.parse(cell.Value).pathname).startsWith(
             `${options.subsite.startsWith('/') ? '' : '/'}${options.subsite}`
           )
@@ -205,7 +205,7 @@ function querySharepoint(entity, token, options, callback) {
     url: `${options.host}/_api/search/query`,
     qs: {
       querytext,
-      RowLimit: options.expandSubsiteSearch ? 500 : 10
+      RowLimit: options.expandSubsiteSearch ? 100 : 10
     },
     headers: {
       Authorization: 'Bearer ' + token
