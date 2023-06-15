@@ -107,47 +107,47 @@ function formatSearchResults(searchResults, options) {
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
     let obj = {};
 
-    let isSubsiteRow = false;
-    if (options.expandSubsiteSearch) {
-      isSubsiteRow = row.Cells.some(
-        (cell) =>
-          cell.Key === 'ParentLink' && cell.Value &&
-          decodeURIComponent(url.parse(cell.Value).pathname).startsWith(
-            `${options.subsite.startsWith('/') ? '' : '/'}${options.subsite}`
-          )
-      );
-    }
-    if ((options.expandSubsiteSearch && isSubsiteRow) || !options.expandSubsiteSearch) {
-      row.Cells.forEach((cell) => {
-        if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
-          cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
-        }
+    row.Cells.forEach((cell) => {
+      if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
+        cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
+      }
 
-        obj[cell.Key] = cell.Value;
-        if (cell.Value) {
-          if (cell.Key === 'FileType') {
-            if (fileTypes[cell.Value]) {
-              obj._icon = fileTypes[cell.Value];
-            } else {
-              obj._icon = 'file';
-            }
-          }
-
-          if (cell.Key === 'Size') {
-            obj._sizeHumanReadable = xbytes(cell.Value);
-          }
-
-          if (cell.Key === 'ParentLink') {
-            obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+      obj[cell.Key] = cell.Value;
+      if (cell.Value) {
+        if (cell.Key === 'FileType') {
+          if (fileTypes[cell.Value]) {
+            obj._icon = fileTypes[cell.Value];
+          } else {
+            obj._icon = 'file';
           }
         }
-      });
 
-      if (data.length <= 10) data.push(obj);
-    }
+        if (cell.Key === 'Size') {
+          obj._sizeHumanReadable = xbytes(cell.Value);
+        }
+
+        if (cell.Key === 'ParentLink') {
+          obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+        }
+      }
+    });
+
+    if (data.length <= 10) data.push(obj);
   });
 
   return data;
+}
+
+function getSearchPath(options) {
+  // Remove trailing slash which breaks the subsite path in the query
+  let subsitePath = options.subsite.trim().endsWith('/') ? options.subsite.trim().slice(0, -1) : options.subsite.trim();
+  if (subsitePath.startsWith('http://') || subsitePath.startsWith('https://')) {
+    return `path:${encodeURI(subsitePath)}`;
+  } else if (subsitePath.startsWith('/')) {
+    return `path:${encodeURI(options.host + subsitePath)}`;
+  } else {
+    return `path:${encodeURI(options.host + '/' + subsitePath)}`;
+  }
 }
 
 const getTokenCacheKey = (options) =>
@@ -193,10 +193,8 @@ function getAuthToken(options, callback) {
 
 function querySharepoint(entity, token, options, callback) {
   let querytext;
-  if (options.subsite && !options.expandSubsiteSearch) {
-    querytext = `'path:${options.host}${options.subsite.startsWith('/') ? '' : '/'}${options.subsite} ${
-      options.directSearch ? `"${entity.value}"` : entity.value
-    }'`;
+  if (options.subsite) {
+    querytext = `'${getSearchPath(options)} ${options.directSearch ? `"${entity.value}"` : entity.value}'`;
   } else {
     querytext = options.directSearch ? `'"${entity.value}"'` : `'${entity.value}'`;
   }
@@ -205,12 +203,15 @@ function querySharepoint(entity, token, options, callback) {
     url: `${options.host}/_api/search/query`,
     qs: {
       querytext,
-      RowLimit: options.expandSubsiteSearch ? 100 : 10
+      RowLimit: 10
     },
     headers: {
       Authorization: 'Bearer ' + token
     }
   };
+
+  Logger.trace({ requestOptions }, 'Sharepoint query request options');
+
   let totalRetriesLeft = 4;
   const requestSharepoint = () => {
     requestWithDefaults(requestOptions, (err, { statusCode, headers }, body) => {

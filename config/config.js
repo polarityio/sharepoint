@@ -82,7 +82,7 @@ module.exports = {
     // the directory you specify is writable by the `polarityd:polarityd` user and group.
 
     //directoryPath: '/var/log/polarity-integrations',
-    level: 'info' //trace, debug, info, warn, error, fatal
+    level: 'trace' //trace, debug, info, warn, error, fatal
   },
   /**
    * Options that are displayed to the user/admin in the Polarity integration user-interface.  Should be structured
@@ -141,21 +141,10 @@ module.exports = {
     },
     {
       key: 'subsite',
-      name: 'Subsite',
-      description:
-        'Limit search to only a subsite (optional)',
+      name: 'Subsite Search Path',
+      description: 'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
       default: '',
       type: 'text',
-      userCanEdit: false,
-      adminOnly: true
-    },
-    {
-      key: 'expandSubsiteSearch',
-      name: 'Expand Subsite Search',
-      description:
-        'Is your search showing results for your Subsite when the option is empty, but not when you add your Subsite?  If so, enable this option to fix the issue.',
-      default: false,
-      type: 'boolean',
       userCanEdit: false,
       adminOnly: true
     },
@@ -188,10 +177,10 @@ module.exports = {
     },
     {
       key: 'directSearch',
-      name: 'Direct Search',
+      name: 'Exact Match Search',
       description:
         'Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).',
-      default: false,
+      default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: true
