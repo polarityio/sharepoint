@@ -63,14 +63,49 @@ The secret to use for authentication.
 ### Tenant ID
 The tenant id to authenticate inside of.
 
-### Subsite
-Limit search to only a subsite (optional)
+### Subsite Search Path
 
-### Expand Subsite Search
-Is your search showing results for your Subsite when the option is empty, but not when you add your Subsite?  If so, enable this option to fix the issue.
+Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host.
 
-> ***NOTE:*** This option does an expanded search then later filters out all of the subsites not specified in the `Subsite` user option.  This has the potential for missing results and slowing down query times.
+#### Examples
 
+The Subsite Search Path should mirror the URL you navigate to when viewing the site in question.  If the host for the Subsite matches the "Host" option value then you only need to provide the relative Subsite path. For example, if the URL path looks like this:
+
+```
+https://[tenant].sharepoint.com/mysubsite
+```
+
+Then you would set the "Subsite Search Path" value to:
+
+```
+mysubsite
+```
+
+In some cases the Subsite is proceeded by the word "sites".  For example:
+
+```
+https://[tenant].sharepoint.com/sites/mysubsite
+```
+
+In this scenario your "Subsite Search Path" would be set to:
+
+```
+sites/mysubsite
+```
+
+Finally, if the host for your Subsite differs from the Host integration option, then you should provide the entire absolute path to the Subsite.  This will happen for "personal" subsites which are located at `https://[tenant]-my`.  For example, if the Subsite is located at:
+
+```
+https://[tenant]-my.sharepoint.com/personal
+```
+
+Then you would set the "Subsite Search Path" value to:
+
+```
+https://[tenant]-my.sharepoint.com/personal
+```
+
+> Note that the Subsite name is not case-sensitive
 
 ### Ignore Entities
 Comma delimited list of entities that you do not want to lookup.
@@ -81,7 +116,7 @@ Domains that match the given regex will not be looked up.
 ### Ignore IP Regex
 IPs that match the given regex will not be looked up.
 
-### Direct Search
+### Exact Match Search
 Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).
 
 ## Polarity
