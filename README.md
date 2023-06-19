@@ -49,40 +49,75 @@ To find your TenantId navigate to the url `https://[TENANT-NAME].sharepoint.com/
 ## Sharepoint Integration Options
 
 ### Host
-
-The sharepoint host to use for querying data.  This will typically look like `https://[TENANT-NAME].sharepoint.com`.
+The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.
 
 ### Authentication Host
-
-The authentication host to use for querying data.  This should usually be set to the default value of `https://accounts.accesscontrol.windows.net`.
+The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".
 
 ### Client ID
-
-The Client ID to use for authentication.
+The client ID to use for authentication.
 
 ### Client Secret
-
-The Client Secret associated with the Client ID.
+The secret to use for authentication.
 
 ### Tenant ID
+The tenant id to authenticate inside of.
 
-The Tenant ID to authenticate inside of.
+### Subsite Search Path
 
-### Subsite
+Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host.
 
-Limit search to only a subsite.  This field should be only the subsite name, _not_ the full path.  This field is optional and can be left blank.
+#### Examples
+
+The Subsite Search Path should mirror the URL you navigate to when viewing the site in question.  If the host for the Subsite matches the "Host" option value then you only need to provide the relative Subsite path. For example, if the URL path looks like this:
+
+```
+https://[tenant].sharepoint.com/mysubsite
+```
+
+Then you would set the "Subsite Search Path" value to:
+
+```
+mysubsite
+```
+
+In some cases the Subsite is proceeded by the word "sites".  For example:
+
+```
+https://[tenant].sharepoint.com/sites/mysubsite
+```
+
+In this scenario your "Subsite Search Path" would be set to:
+
+```
+sites/mysubsite
+```
+
+Finally, if the host for your Subsite differs from the Host integration option, then you should provide the entire absolute path to the Subsite.  This will happen for "personal" subsites which are located at `https://[tenant]-my`.  For example, if the Subsite is located at:
+
+```
+https://[tenant]-my.sharepoint.com/personal
+```
+
+Then you would set the "Subsite Search Path" value to:
+
+```
+https://[tenant]-my.sharepoint.com/personal
+```
+
+> Note that the Subsite name is not case-sensitive
 
 ### Ignore Entities
-
 Comma delimited list of entities that you do not want to lookup.
 
 ### Ignore Domain Regex
-
 Domains that match the given regex will not be looked up.
 
 ### Ignore IP Regex
-
 IPs that match the given regex will not be looked up.
+
+### Exact Match Search
+Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).
 
 ## Polarity
 

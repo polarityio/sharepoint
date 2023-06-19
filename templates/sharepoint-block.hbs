@@ -4,9 +4,25 @@
       <hr>
     {{/if}}
     <div>
-        <div class="p-title">{{fa-icon icon=document._icon fixedWidth=true}}{{document.Title}}</div>
-        <div>
-          <a class="p-link" title="Download file from SharePoint" href="{{document.Path}}">Download {{fa-icon icon="download" fixedWidth=true class="external-link-icon"}}</a>
+        <div class="p-title">
+          {{fa-icon icon=document._icon fixedWidth=true}}{{document.Title}}
+        </div>
+        <div class="d-flex">
+          {{#if document.ServerRedirectedURL}}
+            <div>
+              <a href="{{document.ServerRedirectedURL}}">View {{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a>
+            </div>
+          {{/if}}
+
+          {{#if (and document.Path document.ServerRedirectedURL)}}
+            <div class="mx-1"> | </div>
+          {{/if}}
+
+          {{#if document.Path}}
+            <div>
+              <a class="p-link" title="Download file from SharePoint" href="{{document.Path}}">Download {{fa-icon icon="download" fixedWidth=true class="external-link-icon"}}</a>
+            </div>
+          {{/if}}
         </div>
         <div>
             <span class="p-key">Author: </span>
@@ -15,7 +31,7 @@
         {{#if document.Description}}
           <div>
             <span class="p-key">Description: </span>
-            <span class="p-value">{{document.Description}}</span>
+            <span class="p-description">{{document.Description}}</span>
           </div>
         {{/if}}
         <div>

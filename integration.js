@@ -28,7 +28,7 @@ const fileTypes = {
 
 const MAX_PARALLEL_LOOKUPS = 10;
 let Logger;
-let requestOptions = {};
+let requestWithDefaults = {};
 
 let domainBlockList = [];
 let previousDomainBlockListAsString = '';
@@ -106,37 +106,48 @@ function formatSearchResults(searchResults, options) {
 
   searchResults.PrimaryQueryResult.RelevantResults.Table.Rows.forEach((row) => {
     let obj = {};
+
     row.Cells.forEach((cell) => {
       if (cell.Key === 'HitHighlightedSummary' && cell.Value) {
         cell.Value = cell.Value.replace(/c0/g, 'strong').replace(/<ddd\/>/g, '&#8230;');
       }
 
       obj[cell.Key] = cell.Value;
-      if (cell.Key === 'FileType') {
-        if (fileTypes[cell.Value]) {
-          obj._icon = fileTypes[cell.Value];
-        } else {
-          obj._icon = 'file';
+      if (cell.Value) {
+        if (cell.Key === 'FileType') {
+          if (fileTypes[cell.Value]) {
+            obj._icon = fileTypes[cell.Value];
+          } else {
+            obj._icon = 'file';
+          }
         }
-      }
 
-      if(cell.Key === 'Size'){
-        obj._sizeHumanReadable = xbytes(cell.Value);
-      }
+        if (cell.Key === 'Size') {
+          obj._sizeHumanReadable = xbytes(cell.Value);
+        }
 
-      if(cell.Key === 'ParentLink'){
-        obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+        if (cell.Key === 'ParentLink') {
+          obj._containingFolder = decodeURIComponent(url.parse(cell.Value).pathname);
+        }
       }
     });
 
-    data.push(obj);
+    if (data.length <= 10) data.push(obj);
   });
 
   return data;
 }
 
-function getRequestOptions() {
-  return JSON.parse(JSON.stringify(requestOptions));
+function getSearchPath(options) {
+  // Remove trailing slash which breaks the subsite path in the query
+  let subsitePath = options.subsite.trim().endsWith('/') ? options.subsite.trim().slice(0, -1) : options.subsite.trim();
+  if (subsitePath.startsWith('http://') || subsitePath.startsWith('https://')) {
+    return `path:${encodeURI(subsitePath)}`;
+  } else if (subsitePath.startsWith('/')) {
+    return `path:${encodeURI(options.host + subsitePath)}`;
+  } else {
+    return `path:${encodeURI(options.host + '/' + subsitePath)}`;
+  }
 }
 
 const getTokenCacheKey = (options) =>
@@ -153,7 +164,7 @@ function getAuthToken(options, callback) {
 
   let hostUrl = url.parse(options.host);
 
-  request(
+  requestWithDefaults(
     {
       url: `${options.authHost}/${options.tenantId}/tokens/OAuth/2`,
       formData: {
@@ -181,33 +192,29 @@ function getAuthToken(options, callback) {
 }
 
 function querySharepoint(entity, token, options, callback) {
-  let requestOptions = getRequestOptions();
-
+  let querytext;
   if (options.subsite) {
-    requestOptions.qs = {
-      querytext: options.directSearch
-        ? `'path:${options.host}/${options.subsite} "${entity.value}"'`
-        : `'path:${options.host}/${options.subsite} ${entity.value}'`
-    };
+    querytext = `'${getSearchPath(options)} ${options.directSearch ? `"${entity.value}"` : entity.value}'`;
   } else {
-    requestOptions.qs = {
-      querytext: options.directSearch ? `'"${entity.value}"'` : `'${entity.value}'`
-    };
+    querytext = options.directSearch ? `'"${entity.value}"'` : `'${entity.value}'`;
   }
-  requestOptions.url = `${options.host}/_api/search/query`;
-  requestOptions.headers = {
-    Authorization: 'Bearer ' + token
+
+  const requestOptions = {
+    url: `${options.host}/_api/search/query`,
+    qs: {
+      querytext,
+      RowLimit: 10
+    },
+    headers: {
+      Authorization: 'Bearer ' + token
+    }
   };
 
+  Logger.trace({ requestOptions }, 'Sharepoint query request options');
+
+  let totalRetriesLeft = 4;
   const requestSharepoint = () => {
-    const sharepointRetryDateTime = cache.getTtl('sharepointIsThrottled');
-
-    if (sharepointRetryDateTime) {
-      const waitTime = sharepointRetryDateTime - Date.now();
-      return setTimeout(requestSharepoint, waitTime);
-    }
-
-    request(requestOptions, (err, { statusCode, headers }, body) => {
+    requestWithDefaults(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
 
       const retryAfter = headers['Retry-After'] || headers['retry-after'];
@@ -215,10 +222,9 @@ function querySharepoint(entity, token, options, callback) {
         Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
-      } else if ((statusCode === 429 || statusCode === 503) && retryAfter) {
-        cache.set('sharepointIsThrottled', true, retryAfter);
-
-        setTimeout(requestSharepoint, retryAfter * 1000);
+      } else if ([429, 500, 503].includes(statusCode) && totalRetriesLeft) {
+        totalRetriesLeft--;
+        setTimeout(requestSharepoint, retryAfter * 1000 || 1000);
       } else {
         callback(new Error('status code was ' + statusCode));
       }
@@ -231,7 +237,9 @@ function querySharepoint(entity, token, options, callback) {
 function doLookup(entities, options, callback) {
   Logger.trace('starting lookup');
 
-  Logger.trace('options are', options);
+  options.subsite = options.subsite.startsWith('/') ? options.subsite.slice(1) : options.subsite;
+
+  Logger.trace({ options }, 'doLookup options');
 
   _setupRegexBlocklists(options);
 
@@ -256,6 +264,7 @@ function doLookup(entities, options, callback) {
           if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
 
           let details = formatSearchResults(body, options);
+          if (details.length < 1) return done(null, { entity, data: null });
           let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
 
           done(null, {
@@ -287,32 +296,35 @@ function doLookup(entities, options, callback) {
 
 function startup(logger) {
   Logger = logger;
+  let defaults = {};
 
   if (typeof config.request.cert === 'string' && config.request.cert.length > 0) {
-    requestOptions.cert = fs.readFileSync(config.request.cert);
+    defaults.cert = fs.readFileSync(config.request.cert);
   }
 
   if (typeof config.request.key === 'string' && config.request.key.length > 0) {
-    requestOptions.key = fs.readFileSync(config.request.key);
+    defaults.key = fs.readFileSync(config.request.key);
   }
 
   if (typeof config.request.passphrase === 'string' && config.request.passphrase.length > 0) {
-    requestOptions.passphrase = config.request.passphrase;
+    defaults.passphrase = config.request.passphrase;
   }
 
   if (typeof config.request.ca === 'string' && config.request.ca.length > 0) {
-    requestOptions.ca = fs.readFileSync(config.request.ca);
+    defaults.ca = fs.readFileSync(config.request.ca);
   }
 
   if (typeof config.request.proxy === 'string' && config.request.proxy.length > 0) {
-    requestOptions.proxy = config.request.proxy;
+    defaults.proxy = config.request.proxy;
   }
 
   if (typeof config.request.rejectUnauthorized === 'boolean') {
-    requestOptions.rejectUnauthorized = config.request.rejectUnauthorized;
+    defaults.rejectUnauthorized = config.request.rejectUnauthorized;
   }
 
-  requestOptions.json = true;
+  defaults.json = true;
+
+  requestWithDefaults = request.defaults(defaults);
 }
 
 function validateStringOption(errors, options, optionName, errMessage) {
@@ -336,7 +348,15 @@ function validateOptions(options, callback) {
   validateStringOption(errors, options, 'clientSecret', 'You must provide a Client Secret option.');
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
 
-  callback(null, errors);
+  const subsiteStartWithError =
+    options.subsite.value && options.subsite.value.startsWith('//')
+      ? {
+          key: 'subsite',
+          message: 'Your subsite must not start with a //'
+        }
+      : [];
+
+  callback(null, errors.concat(subsiteStartWithError));
 }
 
 module.exports = {

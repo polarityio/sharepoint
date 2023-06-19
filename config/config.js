@@ -25,7 +25,7 @@ module.exports = {
    * @optional
    */
   description: 'Polarity Sharepoint integration',
-  entityTypes: ['ip', 'hash', 'domain', 'string', 'email'],
+  entityTypes: ['IP', 'hash', 'domain', 'string', 'email'],
   /**
    * An array of style files (css or less) that will be included for your integration. Any styles specified in
    * the below files can be used in your custom template.
@@ -141,9 +141,8 @@ module.exports = {
     },
     {
       key: 'subsite',
-      name: 'Subsite',
-      description:
-        'Limit search to only a subsite (optional).  This field should be only the subsite name and not the full path.',
+      name: 'Subsite Search Path',
+      description: 'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
       default: '',
       type: 'text',
       userCanEdit: false,
@@ -178,10 +177,10 @@ module.exports = {
     },
     {
       key: 'directSearch',
-      name: 'Direct Search',
+      name: 'Exact Match Search',
       description:
         'Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).',
-      default: false,
+      default: true,
       type: 'boolean',
       userCanEdit: false,
       adminOnly: true
