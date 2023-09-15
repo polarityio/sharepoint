@@ -292,7 +292,10 @@ async function doLookup(entities, options, callback) {
   } catch (authError) {
     let jsonError = parseErrorToReadableJSON(authError);
     Logger.error({ jsonError }, 'Error getting auth token');
-    callback(jsonError);
+    callback({
+      detail: 'Error getting Auth token',
+      jsonError
+    });
     return;
   }
 
