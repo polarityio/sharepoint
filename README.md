@@ -1,6 +1,6 @@
 # Polarity sharepoint Integration
 
-The Polarity Sharepoint integration allows IPs, Hashes, domains, cves, emails and annotated entities in your Sharepoint instance and retrieves related documents.
+The Polarity Sharepoint integration allows searching of IPs, Hashes, domains, cves, emails and annotated entities in your Sharepoint instance and retrieves related documents.
 
 For more information on Sharepoint, please visit: [official website] (https://products.office.com/en-us/sharepoint/collaboration).
 
@@ -8,9 +8,9 @@ Check out the integration in action:
 
 ![sharepoint](https://user-images.githubusercontent.com/22529325/55797620-ed0c9900-5a9a-11e9-8438-b9ea09136081.gif)
 
-## Upgrade Notes
+## Upgrade Notes from v3.4.1
 
-Previous versions of the Polarity Sharepoint integration supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication has been deprecated by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via OAuth bearer tokens.  See the "Configuring Sharepoint" section below for more information.
+Versions of this integration up to v3.4.1 supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication has been deprecated by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via OAuth bearer tokens.  See the "Configuring Sharepoint" section below for more information.
 
 ## Configuring Sharepoint
 
@@ -78,6 +78,26 @@ Once the permission has been granted you will need to make sure to "Grant admin 
 
 <img src="./images/api-permissions.png" width="500px">
 
+### Configure the Integration
+
+1. SSH into the Polarity Server and copy or upload the public and private keys into the integration's `certs` directory.  We recommend that your keys are named `private.key` and `public.crt`.  
+
+2. Ensure the keys are readable by the `polarityd` user:
+
+```
+sudo chown polarityd:polarityd /app/polarity-server/integrations/sharepoint/certs/private.key
+sudo chown polarityd:polarityd /app/polarity-server/integrations/sharepoint/certs/public.key
+```
+
+3. From the integration's settings page (within Polarity), fill in your SharePoint host information which will typically look like `https://[TENANT-NAME].sharepoint.com`.
+
+4. Fill in the Application (client ID), and Directory (tenant) ID values that you recorded when you registered your Azure application.
+
+5. If you placed your `private.key` and `public.crt` files into the default locations you do not need to modify the "Private/Public Key File Path" options.
+
+6. If your private key has a passphrase then provide the passphrase for the "Private Key Passphrase" option.
+
+The integration should now be able to authenticate to your SharePoint instance.  You can further configure the integration by reviewing the full options list below.
 
 ## Sharepoint Integration Options
 
