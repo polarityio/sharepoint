@@ -1,6 +1,6 @@
 {
   "name": "sharepoint",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",
@@ -8,7 +8,8 @@
   "dependencies": {
     "async": "^3.2.4",
     "node-cache": "^5.1.2",
-    "postman-request": "^2.88.1-postman.31",
-    "xbytes": "^1.8.0"
+    "postman-request": "^2.88.1-postman.33",
+    "xbytes": "^1.8.0",
+    "@azure/msal-node": "1.18.3"
   }
 }
