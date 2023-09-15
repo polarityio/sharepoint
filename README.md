@@ -10,11 +10,11 @@ Check out the integration in action:
 
 ## Upgrade Notes from v3.4.1
 
-Versions of this integration up to v3.4.1 supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication has been deprecated by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via OAuth bearer tokens.  See the "Configuring Sharepoint" section below for more information.
+Versions of this integration up to v3.4.1 supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication is discouraged by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via Certificates.  See the "Configuring Sharepoint" section below for more information.
 
 ## Configuring Sharepoint
 
-The Polarity-Sharepoint integration uses Azure App Authentication via OAuth bearer tokens.  To setup the integration you register a new application with Azure.  Once the application is registered you will need to upload a public certificate (the corresponding private certificate is needed by the integration on the Polarity Server).  Finally, you need to set the appropriate API permissions.  See below for detailed instructions. 
+The Polarity-Sharepoint integration uses Azure App Authentication via Certificates.  To configure the integration you register a new application with Azure.  Once the application is registered you will need to upload a public certificate (the corresponding private certificate is needed by the integration on the Polarity Server).  Finally, you need to set the appropriate API permissions.  See below for detailed instructions. 
 
 ### Register the App
 
