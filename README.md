@@ -1,6 +1,6 @@
 # Polarity sharepoint Integration
 
-The Polarity Sharepoint integration allows freeform text searching for IPs, Hashes and domains in your Sharepoint instance and retrieves related documents.
+The Polarity Sharepoint integration allows IPs, Hashes, domains, cves, emails and annotated entities in your Sharepoint instance and retrieves related documents.
 
 For more information on Sharepoint, please visit: [official website] (https://products.office.com/en-us/sharepoint/collaboration).
 
@@ -8,60 +8,106 @@ Check out the integration in action:
 
 ![sharepoint](https://user-images.githubusercontent.com/22529325/55797620-ed0c9900-5a9a-11e9-8438-b9ea09136081.gif)
 
+## Upgrade Notes
+
+Previous versions of the Polarity Sharepoint integration supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication has been deprecated by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via OAuth bearer tokens.  See the "Configuring Sharepoint" section below for more information.
+
 ## Configuring Sharepoint
 
-The Polarity-Sharepoint integration uses Sharepoint Addin Authentication via OAuth bearer tokens.  To setup the integration you register a new application with Sharepoint to generate the client id and client secret.  Once the application is registered you set the permissions.
+The Polarity-Sharepoint integration uses Azure App Authentication via OAuth bearer tokens.  To setup the integration you register a new application with Azure.  Once the application is registered you will need to upload a public certificate (the corresponding private certificate is needed by the integration on the Polarity Server).  Finally, you need to set the appropriate API permissions.  See below for detailed instructions. 
 
 ### Register the App
 
-Navigate to `https://[TENANT-NAME].sharepoint.com/_layouts/15/appregnew.aspx`.  Click on "Generate" for the `Client ID` and record the value.
-Click on generate for the `Client Secret` and record the value. 
+Browse to https://entra.microsoft.com/ and then navigate to "Applications" -> "App Registrations".  From there, click on "New registration" to create a new Azure Application.
 
-Fill in a `Title` such as "Polarity Sharepoint Integration".
+Choose a name for your application (e.g., "Polarity Sharepoint Integration").  A Redirect URI is not required for this integration.
 
-For the AppDomain you can specify your company domain (e.g., mycompany.com) and for the Redirect URI you can use `https://localhost/`.
+Once the application is created, record the `Application (client) ID` and `Directory (tenant) ID` values as you will need these when configuring the integration in Polarity.
 
-Click Create.
+<img src="./images/app-id-tenant-id.png" width="500px">
 
-### Give permissions
+### Upload a public key certificate
 
-Navigate to `https://[TENANT-NAME]-admin.sharepoint.com/_layouts/15/appinv.aspx`. 
-> Note that this will register the application at the tenant level which means the credentials can be used everywhere inside your tenant.
+Sharepoint Azure Apps require that  app-based authentication is done via a certificate (Client secret based authentication is not supported by Azure for Sharepoint).  Upload your public key to Azure by navigating to "Certificates & secrets" and clicking on the "Upload certificate" button to upload your **public** key to Azure. 
 
-Fill in the `clientId` as the `App Id` and click on the "Lookup" button.
+<img src="./images/upload-cert.png" width="500px">
 
-Once the inputs fill in with your app information provide the following permission.
+The public/private key pair must be encoded in the **PEM** format using the **PKCS8** container.  
+
+You can check to see if your private key is in the right format by viewing the content of the key.  The file content should look like this:
 
 ```
-<AppPermissionRequests AllowAppOnlyPolicy="true">
-  <AppPermissionRequest Scope="http://sharepoint/content/tenant" Right="Read" />
-</AppPermissionRequests>
+-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQC1NALrZ6xcgCLO
+// Additional Base64 encoded text
+-----END PRIVATE KEY-----
 ```
 
-This will provide `READ` access to sites within your tenant.
+You can create a self-signed public/private key pair using the following command:
 
-Click "Create" and then the "Trust It" button.
+```
+openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout private.key -out public.crt
+```
 
-### Finding your TenantId
+> Note that the above command will create a private key that is not encrypted with a passphrase.  If you want to encrypt the private key with a passphrase you can add the `-passout pass:<your-password>` option to the command above.
 
-To find your TenantId navigate to the url `https://[TENANT-NAME].sharepoint.com/_layouts/appprincipals.aspx`.  When the page loads, in the right hand `App Identifier` column you will find a series of app ids.  The Tenant ID appears after the `@` sign and has the format `XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`.
+The above command will generate a private key called `private.key` and a public key called `public.crt`.  Upload `public.crt` to your Azure application. 
+
+Both the public and private key should be saved on the Polarity Server.  By default, the integration will look for the public and private key in the `./certs` directory.  To use the default settings, your directory structure should look like this:
+
+```
+| /app/polarity-server/integration/sharepoint/certs
+|------- public.crt
+|------- private.key
+```
+
+> The public key file is required so that the integration can compute the thumbprint of the public key.  The thumbprint is used to authenticate with Azure.
+
+If you need to change the location or filename of the public and private key be sure to update the "Private Key File Path" and "Public Key File Path" integration options.
+
+
+### Set API Permissions
+
+From the Azure "App Registrations" page, click on "API Permissions" and then click on the "Add a permission" button.  
+
+Under Microsoft APIs select "SharePoint" and then select "Application permissions".
+
+Under "Sites", find the permissions for "Sites.Read.All" and select it.  Click on the "Add permissions" button to add the permission.
+
+Once the permission has been granted you will need to make sure to "Grant admin consent" for the permission.
+
+<img src="./images/api-permissions.png" width="500px">
+
 
 ## Sharepoint Integration Options
 
 ### Host
 The sharepoint host to use for querying data. This will typically look like `https://[TENANT-NAME].sharepoint.com`.
 
-### Authentication Host
-The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".
+### Application (client) ID
 
-### Client ID
-The client ID to use for authentication.
+The Application (client) ID to use for authentication.
 
-### Client Secret
-The secret to use for authentication.
+### Directory (tenant) ID
 
-### Tenant ID
-The tenant id to authenticate inside of.
+The Directory (tenant) id to authenticate inside of.
+
+
+### Private Key File Path
+
+The Polarity Server file path to the private key file to use for authentication. Relative paths should start with "./" and are relative to this integration's directory. The private key must be encoded in the PEM format using the PKCS8 container. 
+
+Defaults to "./certs/private.key".
+
+### Private Key Passphrase
+
+The passphrase for the private key. Leave blank if the private key does not have a passphrase.
+
+### Public Key File Path
+
+The Polarity Server file path to the public key file that corresponds to the private key used for authentication. Relative paths should start with "./" and are relative to this integration's directory. The public key must be encoded in the PEM format using the PKCS8 container. 
+
+Defaults to "./certs/public.key".
 
 ### Subsite Search Path
 
@@ -118,6 +164,32 @@ IPs that match the given regex will not be looked up.
 
 ### Exact Match Search
 Check if you want each Sharepoint search to be an exact match with found entities (i.e., wrap the search term in quotes).
+
+## Troubleshooting
+
+### Server timestamp
+
+If you see the following error:
+
+```
+ServerError: invalid_client: 700024 - [2023-09-15 14:47:13Z]: AADSTS700024: Client assertion is not within its valid time range.
+```
+
+Then check to ensure that the clock on your server is set properly.
+
+### Invalid permissions
+
+If you see any of the following errors then it's likely that you have not assigned the correct permissions to your Azure application.  Ensure the application has been assigned the `SharePoint -> Sites.Read.All` permission and that Admin consent has been granted.
+
+```
+"ID3035: The request was not valid or is malformed."
+```
+
+or
+
+```
+Error: status code was 401
+```
 
 ## Polarity
 
