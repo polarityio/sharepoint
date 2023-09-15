@@ -123,7 +123,8 @@ module.exports = {
     {
       key: 'privateKeyPath',
       name: 'Private Key File Path',
-      description: 'The Polarity Server file path to the private key file to use for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The private key must be encoded in the PEM format using the PKCS8 container.',
+      description:
+        'The Polarity Server file path to the private key file to use for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The private key must be encoded in the PEM format using the PKCS8 container. Defaults to "./certs/private.key"',
       default: './certs/private.key',
       type: 'text',
       userCanEdit: false,
@@ -141,7 +142,8 @@ module.exports = {
     {
       key: 'publicKeyPath',
       name: 'Public Key File Path',
-      description: 'The Polarty Server file path to the public key file that corresponds to the private key used for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The public key must be encoded in the PEM format using the PKCS8 container.',
+      description:
+        'The Polarity Server file path to the public key file that corresponds to the private key used for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The public key must be encoded in the PEM format using the PKCS8 container. Defaults to "./certs/public.key"',
       default: './certs/public.crt',
       type: 'text',
       userCanEdit: false,
@@ -150,7 +152,8 @@ module.exports = {
     {
       key: 'subsite',
       name: 'Subsite Search Path',
-      description: 'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
+      description:
+        'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
       default: '',
       type: 'text',
       userCanEdit: false,
