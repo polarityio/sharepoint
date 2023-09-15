@@ -159,20 +159,22 @@ function maybeSetClientApplication(options) {
 
   if (clientApplication === null) {
     const privateKeySource = fs.readFileSync(options.privateKeyPath);
-    const publicKeySource = fs.readFileSync(options.publicKeyPath).toString()
-        .split("\n")
-        .filter(line => !line.includes("-----"))
-        .map(line => line.trim() )
-        .join("");
+    const publicKeySource = fs
+      .readFileSync(options.publicKeyPath)
+      .toString()
+      .split('\n')
+      .filter((line) => !line.includes('-----'))
+      .map((line) => line.trim())
+      .join('');
     const publicKeySourceBase64 = Buffer.from(publicKeySource, 'base64');
     const publicKeyThumbprint = crypto.createHash('sha1').update(publicKeySourceBase64, 'utf8').digest('hex');
 
     const privateKeyOptions = {
       key: privateKeySource,
       format: 'pem'
-    }
+    };
 
-    if(options.privateKeyPassphrase) {
+    if (options.privateKeyPassphrase) {
       privateKeyOptions.passphrase = options.privateKeyPassphrase;
     }
 
@@ -207,18 +209,19 @@ async function getToken(options) {
   };
 
   const response = await clientApplication.acquireTokenByClientCredential(clientCredentialRequest);
-  Logger.info({ response }, 'Response to getting credentials');
+
+  Logger.trace({ response }, 'Acquire Tokens Response');
   return response.accessToken;
 }
 
-const getTokenCacheKey = (options) =>
-  options.host + options.tenantId + options.clientId;
+const getTokenCacheKey = (options) => options.host + options.tenantId + options.clientId;
 
 async function getAuthToken(options) {
   let tokenCacheKey = getTokenCacheKey(options);
   let token = cache.get(tokenCacheKey);
 
   if (token) {
+    Logger.trace('Using cached token for lookup');
     return token;
   }
 
@@ -251,19 +254,19 @@ function querySharepoint(entity, token, options, callback) {
 
   let totalRetriesLeft = 4;
   const requestSharepoint = () => {
-    requestWithDefaults(requestOptions, (err, {statusCode, headers}, body) => {
+    requestWithDefaults(requestOptions, (err, { statusCode, headers }, body) => {
       if (err) return callback(err);
 
       const retryAfter = headers['Retry-After'] || headers['retry-after'];
       if (statusCode === 200) {
-        Logger.trace({headers}, 'Results of Sharepoint query headers');
+        Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
       } else if ([429, 500, 503].includes(statusCode) && totalRetriesLeft) {
         totalRetriesLeft--;
         setTimeout(requestSharepoint, retryAfter * 1000 || 1000);
       } else {
-        Logger.error({err, body}, 'Error querying Sharepoint');
+        Logger.error({ err, body }, 'Error querying Sharepoint');
         callback(new Error('status code was ' + statusCode));
       }
     });
