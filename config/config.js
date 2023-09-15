@@ -65,23 +65,9 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: '',
-    /**
-     * If set to false, the integration will ignore SSL errors.  This will allow the integration to connect
-     * to Sharepoint servers without valid SSL certificates.  Please note that we do NOT recommending setting this
-     * to false in a production environment.
-     */
-    rejectUnauthorized: true
+    proxy: ''
   },
   logging: {
-    // directory is relative to the this integrations directory
-    // e.g., if the integration is in /app/polarity-server/integrations/virustotal
-    // and you set directoryPath to be `integration-logs` then your logs will go to
-    // `/app/polarity-server/integrations/integration-logs`
-    // You can also set an absolute path.  If you set an absolute path you must ensure that
-    // the directory you specify is writable by the `polarityd:polarityd` user and group.
-
-    //directoryPath: '/var/log/polarity-integrations',
     level: 'info' //trace, debug, info, warn, error, fatal
   },
   /**
