@@ -78,6 +78,13 @@ Once the permission has been granted you will need to make sure to "Grant admin 
 
 <img src="./images/api-permissions.png" width="500px">
 
+In this example we granted permission via the "Sites.Read.All" permission.  You can further constrain site access via the "Subsite Search Path" option within the Polarity Integration.
+
+The integration also supports the SharePoint "Sites.Selected" permission.  This permission allows you to specify specific sites that the integration can access.  This access is enforced by Azure.  If you use this permission, you will also need to grant the appropraite permissions to the Azure app via the Graph API permissions endpoint.  
+
+For more information on the "Sites.Selected" permission please see https://devblogs.microsoft.com/microsoft365dev/updates-on-controlling-app-specific-access-on-specific-sharepoint-sites-sites-selected/
+
+
 ### Configure the Integration
 
 1. SSH into the Polarity Server and copy or upload the public and private keys into the integration's `certs` directory.  We recommend that your keys are named `private.key` and `public.crt`.  
