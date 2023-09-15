@@ -204,7 +204,7 @@ ServerError: invalid_client: 700024 - [2023-09-15 14:47:13Z]: AADSTS700024: Clie
 
 Then check to ensure that the clock on your server is set properly.
 
-### Invalid permissions
+### Invalid API permissions
 
 If you see any of the following errors then it's likely that you have not assigned the correct permissions to your Azure application.  Ensure the application has been assigned the `SharePoint -> Sites.Read.All` permission and that Admin consent has been granted.
 
@@ -217,6 +217,35 @@ or
 ```
 Error: status code was 401
 ```
+
+### Missing Files
+
+If you see an error like this:
+
+```
+Error: ENOENT: no such file or directory, open './certs/private.key'
+```
+It means the file could not be found.  Please check that the private or public key exists on your server in the expected location and that the file is readable by the `polarityd` user.
+
+
+### 403 status code
+
+A 403 status code means the credentials for the integration do not have permission to access SharePoint.  This typically occurs if the wrong public/private key pair is being used, or if the `Sites.Selected` permission is being used and the correct permissions have not been granted via the Graph API.
+
+```
+Error: status code was 403 at
+```
+
+### Permission Denied
+
+If you see an error like this:
+
+```
+Error: EACCES: permission denied, open './certs/private.key'
+```
+
+It means the public and or private key are not readable by the `polarityd` user.  Ensure that the files are globally readable or are owned by the `polarityd` user.
+
 
 ## Polarity
 
