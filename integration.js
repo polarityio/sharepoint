@@ -6,6 +6,9 @@ const url = require('url');
 const fs = require('fs');
 const xbytes = require('xbytes');
 const NodeCache = require('node-cache');
+const msal = require('@azure/msal-node');
+const crypto = require('crypto');
+
 const cache = new NodeCache({
   stdTTL: 60 * 10
 });
@@ -28,7 +31,7 @@ const fileTypes = {
 
 const MAX_PARALLEL_LOOKUPS = 10;
 let Logger;
-let requestWithDefaults = {};
+let requestWithDefaults;
 
 let domainBlockList = [];
 let previousDomainBlockListAsString = '';
@@ -36,6 +39,7 @@ let previousDomainRegexAsString = '';
 let previousIpRegexAsString = '';
 let domainBlocklistRegex = null;
 let ipBlocklistRegex = null;
+let clientApplication = null;
 
 function _setupRegexBlocklists(options) {
   if (options.domainBlocklistRegex !== previousDomainRegexAsString && options.domainBlocklistRegex.length === 0) {
@@ -150,45 +154,81 @@ function getSearchPath(options) {
   }
 }
 
-const getTokenCacheKey = (options) =>
-  options.host + options.authHost + options.tenantId + options.clientId + options.clientSecret;
+function maybeSetClientApplication(options) {
+  Logger.trace({ options }, 'maybeSetClientApplication');
 
-function getAuthToken(options, callback) {
+  if (clientApplication === null) {
+    const privateKeySource = fs.readFileSync(options.privateKeyPath);
+    const publicKeySource = fs
+      .readFileSync(options.publicKeyPath)
+      .toString()
+      .split('\n')
+      .filter((line) => !line.includes('-----'))
+      .map((line) => line.trim())
+      .join('');
+    const publicKeySourceBase64 = Buffer.from(publicKeySource, 'base64');
+    const publicKeyThumbprint = crypto.createHash('sha1').update(publicKeySourceBase64, 'utf8').digest('hex');
+
+    const privateKeyOptions = {
+      key: privateKeySource,
+      format: 'pem'
+    };
+
+    if (options.privateKeyPassphrase) {
+      privateKeyOptions.passphrase = options.privateKeyPassphrase;
+    }
+
+    const privateKeyObject = crypto.createPrivateKey(privateKeyOptions);
+
+    const privateKey = privateKeyObject.export({
+      format: 'pem',
+      type: 'pkcs8'
+    });
+
+    const clientConfig = {
+      auth: {
+        clientId: options.clientId,
+        authority: `https://login.microsoftonline.com/${options.tenantId}`,
+        clientCertificate: {
+          thumbprint: publicKeyThumbprint,
+          privateKey
+        }
+      }
+    };
+
+    clientApplication = new msal.ConfidentialClientApplication(clientConfig);
+  }
+}
+
+async function getToken(options) {
+  const clientCredentialRequest = {
+    //scopes: ['https://graph.microsoft.com/.default'] //clientCredentialRequestScopes,
+    scopes: [`${options.host}/.default`],
+    // azureRegion: ro ? ro.region : null, // (optional) specify the region you will deploy your application to here (e.g. "westus2")
+    skipCache: true // (optional) this skips the cache and forces MSAL to get a new token from Azure AD
+  };
+
+  const response = await clientApplication.acquireTokenByClientCredential(clientCredentialRequest);
+
+  Logger.trace({ response }, 'Acquire Tokens Response');
+  return response.accessToken;
+}
+
+const getTokenCacheKey = (options) => options.host + options.tenantId + options.clientId;
+
+async function getAuthToken(options) {
   let tokenCacheKey = getTokenCacheKey(options);
   let token = cache.get(tokenCacheKey);
 
   if (token) {
-    callback(null, token);
-    return;
+    Logger.trace('Using cached token for lookup');
+    return token;
   }
 
-  let hostUrl = url.parse(options.host);
-
-  requestWithDefaults(
-    {
-      url: `${options.authHost}/${options.tenantId}/tokens/OAuth/2`,
-      formData: {
-        grant_type: 'client_credentials',
-        client_id: `${options.clientId}@${options.tenantId}`,
-        client_secret: options.clientSecret,
-        resource: `00000003-0000-0ff1-ce00-000000000000/${hostUrl.host}@${options.tenantId}`
-      },
-      json: true,
-      method: 'POST'
-    },
-    (err, resp, body) => {
-      if (err) return callback(err);
-
-      if (resp.statusCode !== 200) {
-        callback({ err: new Error('status code was not 200'), body: body });
-        return;
-      }
-
-      cache.set(tokenCacheKey, body.access_token);
-
-      callback(null, body.access_token);
-    }
-  );
+  maybeSetClientApplication(options);
+  let newToken = await getToken(options);
+  cache.set(tokenCacheKey, newToken);
+  return newToken;
 }
 
 function querySharepoint(entity, token, options, callback) {
@@ -226,6 +266,7 @@ function querySharepoint(entity, token, options, callback) {
         totalRetriesLeft--;
         setTimeout(requestSharepoint, retryAfter * 1000 || 1000);
       } else {
+        Logger.error({ err, body }, 'Error querying Sharepoint');
         callback(new Error('status code was ' + statusCode));
       }
     });
@@ -234,7 +275,9 @@ function querySharepoint(entity, token, options, callback) {
   requestSharepoint();
 }
 
-function doLookup(entities, options, callback) {
+const parseErrorToReadableJSON = (error) => JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
+
+async function doLookup(entities, options, callback) {
   Logger.trace('starting lookup');
 
   options.subsite = options.subsite.startsWith('/') ? options.subsite.slice(1) : options.subsite;
@@ -243,54 +286,59 @@ function doLookup(entities, options, callback) {
 
   _setupRegexBlocklists(options);
 
-  getAuthToken(options, (err, token) => {
+  let token;
+  try {
+    token = await getAuthToken(options);
+  } catch (authError) {
+    let jsonError = parseErrorToReadableJSON(authError);
+    Logger.error({ jsonError }, 'Error getting auth token');
+    callback({
+      detail: 'Error getting Auth token',
+      jsonError
+    });
+    return;
+  }
+
+  const requestQueue = entities.reduce((requestQueue, entity) => {
+    if (_isEntityBlocklisted(entity)) return requestQueue;
+
+    // We have to do 1 request per query because we can only AND the query
+    // params not OR them
+    return requestQueue.concat((done) =>
+      querySharepoint(entity, token, options, async (err, body) => {
+        if (err) return done(err);
+
+        Logger.trace({ entity, body }, 'Results of Sharepoint query');
+
+        if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
+
+        let details = formatSearchResults(body, options);
+        if (details.length < 1) return done(null, { entity, data: null });
+        let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
+
+        done(null, {
+          entity,
+          data: {
+            summary: tags,
+            details
+          }
+        });
+      })
+    );
+  }, []);
+
+  async.parallelLimit(requestQueue, MAX_PARALLEL_LOOKUPS, (err, lookupResults) => {
     if (err) {
-      Logger.error(err, 'Error fetching auth token');
-      callback({ err: err });
+      Logger.error('lookup errored', err);
+
+      // errors can sometime have circular structure and this breaks polarity
+      callback({ detail: util.inspect(err) });
       return;
     }
 
-    const requestQueue = entities.reduce((requestQueue, entity) => {
-      if (_isEntityBlocklisted(entity)) return requestQueue;
+    Logger.trace({ lookupResults }, 'Results');
 
-      // We have to do 1 request per query because we can only AND the query
-      // params not OR them
-      return requestQueue.concat((done) =>
-        querySharepoint(entity, token, options, async (err, body) => {
-          if (err) return done(err);
-
-          Logger.trace({ entity, body }, 'Results of Sharepoint query');
-
-          if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
-
-          let details = formatSearchResults(body, options);
-          if (details.length < 1) return done(null, { entity, data: null });
-          let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
-
-          done(null, {
-            entity,
-            data: {
-              summary: tags,
-              details
-            }
-          });
-        })
-      );
-    }, []);
-
-    async.parallelLimit(requestQueue, MAX_PARALLEL_LOOKUPS, (err, lookupResults) => {
-      if (err) {
-        Logger.error('lookup errored', err);
-
-        // errors can sometime have circular structure and this breaks polarity
-        callback({ detail: util.inspect(err) });
-        return;
-      }
-
-      //Logger.debug({ lookupResults }, 'Results');
-
-      callback(null, lookupResults);
-    });
+    callback(null, lookupResults);
   });
 }
 
@@ -343,9 +391,7 @@ function validateOptions(options, callback) {
   let errors = [];
 
   validateStringOption(errors, options, 'host', 'You must provide a Host option.');
-  validateStringOption(errors, options, 'authHost', 'You must provide an Authentication Host option.');
   validateStringOption(errors, options, 'clientId', 'You must provide a Client ID option.');
-  validateStringOption(errors, options, 'clientSecret', 'You must provide a Client Secret option.');
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
 
   const subsiteStartWithError =

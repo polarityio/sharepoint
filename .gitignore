@@ -37,3 +37,10 @@ key/
 .histoy
 *.vscode
 .vscode
+
+# Ignore certificates
+*.crt
+*.pfx
+*.key
+*.pem
+*.cer

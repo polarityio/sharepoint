@@ -65,17 +65,9 @@ module.exports = {
     ca: '',
     // An HTTP proxy to be used. Supports proxy Auth with Basic Auth, identical to support for
     // the url parameter (by embedding the auth info in the uri)
-    proxy: ""
+    proxy: ''
   },
   logging: {
-    // directory is relative to the this integrations directory
-    // e.g., if the integration is in /app/polarity-server/integrations/virustotal
-    // and you set directoryPath to be `integration-logs` then your logs will go to
-    // `/app/polarity-server/integrations/integration-logs`
-    // You can also set an absolute path.  If you set an absolute path you must ensure that
-    // the directory you specify is writable by the `polarityd:polarityd` user and group.
-
-    //directoryPath: '/var/log/polarity-integrations',
     level: 'info' //trace, debug, info, warn, error, fatal
   },
   /**
@@ -97,38 +89,48 @@ module.exports = {
       adminOnly: true
     },
     {
-      key: 'authHost',
-      name: 'Authentication Host',
-      description:
-        'The authentication host to use for querying data.  This should usually be set to the default value of "https://accounts.accesscontrol.windows.net".',
-      default: 'https://accounts.accesscontrol.windows.net',
-      type: 'text',
-      userCanEdit: false,
-      adminOnly: true
-    },
-    {
       key: 'clientId',
-      name: 'Client ID',
-      description: 'The client ID to use for authentication.',
+      name: 'Application (client) ID',
+      description: 'The Application (client) ID to use for authentication.',
       default: '',
       type: 'text',
       userCanEdit: false,
       adminOnly: true
     },
     {
-      key: 'clientSecret',
-      name: 'Client Secret',
-      description: 'The secret to use for authentication.',
+      key: 'tenantId',
+      name: 'Directory (tenant) ID',
+      description: 'The Directory (tenant) id to authenticate inside of.',
+      default: '',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'privateKeyPath',
+      name: 'Private Key File Path',
+      description:
+        'The Polarity Server file path to the private key file to use for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The private key must be encoded in the PEM format using the PKCS8 container. Defaults to "./certs/private.key"',
+      default: './certs/private.key',
+      type: 'text',
+      userCanEdit: false,
+      adminOnly: true
+    },
+    {
+      key: 'privateKeyPassphrase',
+      name: 'Private Key Passphrase',
+      description: 'The passphrase for the private key.  Leave blank if the private key does not have a passphrase.',
       default: '',
       type: 'password',
       userCanEdit: false,
       adminOnly: true
     },
     {
-      key: 'tenantId',
-      name: 'Tenant ID',
-      description: 'The tenant id to authenticate inside of.',
-      default: '',
+      key: 'publicKeyPath',
+      name: 'Public Key File Path',
+      description:
+        'The Polarity Server file path to the public key file that corresponds to the private key used for authentication.  Relative paths should start with "./" and are relative to this integration\'s directory. The public key must be encoded in the PEM format using the PKCS8 container. Defaults to "./certs/public.key"',
+      default: './certs/public.crt',
       type: 'text',
       userCanEdit: false,
       adminOnly: true
@@ -136,7 +138,8 @@ module.exports = {
     {
       key: 'subsite',
       name: 'Subsite Search Path',
-      description: 'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
+      description:
+        'Limit search to only the specified subsite path (optional).  Subsites can be specified by name, relative path, or full absolute path to include the host and scheme (e.g., https://[TENANT-NAME].sharepoint.com/sites/mysubsite)',
       default: '',
       type: 'text',
       userCanEdit: false,
