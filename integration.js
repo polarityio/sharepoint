@@ -158,6 +158,12 @@ function maybeSetClientApplication(options) {
   Logger.trace({ options }, 'maybeSetClientApplication');
 
   if (clientApplication === null) {
+    if (!fs.existsSync(options.privateKeyPath)) {
+      throw new Error(`Private key file does not exist at ${options.privateKeyPath}`);
+    }
+    if (!fs.existsSync(options.publicKeyPath)) {
+      throw new Error(`Public key file does not exist at ${options.publicKeyPath}`);
+    }
     const privateKeySource = fs.readFileSync(options.privateKeyPath);
     const publicKeySource = fs
       .readFileSync(options.publicKeyPath)
@@ -393,7 +399,9 @@ function validateOptions(options, callback) {
   validateStringOption(errors, options, 'host', 'You must provide a Host option.');
   validateStringOption(errors, options, 'clientId', 'You must provide a Client ID option.');
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
-
+  validateStringOption(errors, options, 'publicKeyPath', 'You must provide a public key file path.');
+  validateStringOption(errors, options, 'privateKeyPath', 'You must provide a private key file path.');
+  
   const subsiteStartWithError =
     options.subsite.value && options.subsite.value.startsWith('//')
       ? {
@@ -406,7 +414,7 @@ function validateOptions(options, callback) {
 }
 
 module.exports = {
-  doLookup: doLookup,
-  startup: startup,
-  validateOptions: validateOptions
+  doLookup,
+  startup,
+  validateOptions
 };
