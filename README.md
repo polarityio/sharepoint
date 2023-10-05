@@ -119,12 +119,13 @@ The Application (client) ID to use for authentication.
 
 The Directory (tenant) id to authenticate inside of.
 
-
 ### Private Key File Path
 
 The Polarity Server file path to the private key file to use for authentication. Relative paths should start with "./" and are relative to this integration's directory. The private key must be encoded in the PEM format using the PKCS8 container. 
 
 Defaults to "./certs/private.key".
+
+You must restart the integration after making changes to this option.
 
 ### Private Key Passphrase
 
@@ -134,7 +135,9 @@ The passphrase for the private key. Leave blank if the private key does not have
 
 The Polarity Server file path to the public key file that corresponds to the private key used for authentication. Relative paths should start with "./" and are relative to this integration's directory. The public key must be encoded in the PEM format using the PKCS8 container. 
 
-Defaults to "./certs/public.key".
+Defaults to "./certs/public.crt".
+
+You must restart the integration after making changes to this option.
 
 ### Subsite Search Path
 
