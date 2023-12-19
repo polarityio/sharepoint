@@ -12,6 +12,13 @@ Check out the integration in action:
 
 Versions of this integration up to v3.4.1 supported authentication as a Sharepoint Add-in using a Client Secret.  This method of authentication is discouraged by Microsoft and is no longer supported by this version of the integration.  If you are using a previous version of the integration you will need to reconfigure the integration to use Azure App Authentication via Certificates.  See the "Configuring Sharepoint" section below for more information.
 
+## Network Connectivity
+
+Note that to authenticate with Sharepoint in Azure, the integration will need access to both your Sharepoint site (e.g., https://mysite.sharepoint.com) and it will need access to the Microsoft authentication server
+`https://login.microsoftonline.com`.
+
+If your environment requires configuring a proxy, ensure that the proxy allows outbound connections to both your sharepoint site and `https://login.microsoftonline.com`.
+
 ## Configuring Sharepoint
 
 The Polarity-Sharepoint integration uses Azure App Authentication via Certificates.  To configure the integration you register a new application with Azure.  Once the application is registered you will need to upload a public certificate (the corresponding private certificate is needed by the integration on the Polarity Server).  Finally, you need to set the appropriate API permissions.  See below for detailed instructions. 
@@ -249,6 +256,26 @@ Error: EACCES: permission denied, open './certs/private.key'
 
 It means the public and or private key are not readable by the `polarityd` user.  Ensure that the files are globally readable or are owned by the `polarityd` user.
 
+
+### Proxy Issues
+
+If the integration is unable to connect to your proxy or if the proxy is not allowing outbound connections to `login.microsoftonline.com` then you may see the following error:
+
+```
+ClientAuthError: endpoints_resolution_error: Error: could not resolve endpoints. Please check network and try again.
+```
+
+If you see this error, confirm that you have a proxy configured and that the configuration is correct.  You can also test for connectivity from the Polarity Server command line using curl:
+
+```
+curl -vvv https://login.microsoftonline.com
+```
+
+If you are using a proxy then add the proxy flag (`-x`) and your proxy configuration string:
+
+```
+curl -vvv -x https://myproxy:8080 https://login.microsoftonline.com
+```
 
 ## Polarity
 

@@ -8,6 +8,7 @@ const xbytes = require('xbytes');
 const NodeCache = require('node-cache');
 const msal = require('@azure/msal-node');
 const crypto = require('crypto');
+const SharepointHttpAuthClient = require('./sharepoint-http-client');
 
 const cache = new NodeCache({
   stdTTL: 60 * 10
@@ -191,6 +192,11 @@ function maybeSetClientApplication(options) {
       type: 'pkcs8'
     });
 
+    // The msal-node library uses its own HTTPClient which does not have proper proxy support.
+    // As a result, we have to implement our own HTTPClient that wraps the postman-request library
+    // to get proper proxy support.
+    const customHttpClient = new SharepointHttpAuthClient(requestWithDefaults, Logger);
+
     const clientConfig = {
       auth: {
         clientId: options.clientId,
@@ -199,10 +205,54 @@ function maybeSetClientApplication(options) {
           thumbprint: publicKeyThumbprint,
           privateKey
         }
+      },
+      system: {
+        loggerOptions: {
+          loggerCallback(logLevel, message, containsPii) {
+            Logger[msalLogLevelToPolarity(logLevel)]({ logLevel, message, containsPii }, 'MSAL Logger');
+          },
+          piiLoggingEnabled: config.logging.level === 'trace' ? true : false,
+          logLevel: polarityToMsalLogLevel(config.logging.level)
+        },
+        networkClient: customHttpClient.getClient()
       }
     };
 
+    Logger.trace({ clientConfig }, 'MSAL Client Config');
+
     clientApplication = new msal.ConfidentialClientApplication(clientConfig);
+  }
+}
+
+function polarityToMsalLogLevel(polarityLogLevel) {
+  switch (polarityLogLevel) {
+    case 'trace':
+      return msal.LogLevel.Verbose;
+    case 'debug':
+      return msal.LogLevel.Verbose;
+    case 'info':
+      return msal.LogLevel.Info;
+    case 'warn':
+      return msal.LogLevel.Warning;
+    case 'error':
+      return msal.LogLevel.Error;
+    default:
+      return msal.LogLevel.Info;
+  }
+}
+
+function msalLogLevelToPolarity(msalLogLevel) {
+  switch (msalLogLevel) {
+    case msal.LogLevel.Verbose:
+      return 'trace';
+    case msal.LogLevel.Info:
+      return 'info';
+    case msal.LogLevel.Warning:
+      return 'warn';
+    case msal.LogLevel.Error:
+      return 'error';
+    default:
+      return 'info';
   }
 }
 
@@ -232,6 +282,7 @@ async function getAuthToken(options) {
   }
 
   maybeSetClientApplication(options);
+
   let newToken = await getToken(options);
   cache.set(tokenCacheKey, newToken);
   return newToken;
@@ -260,12 +311,13 @@ function querySharepoint(entity, token, options, callback) {
 
   let totalRetriesLeft = 4;
   const requestSharepoint = () => {
-    requestWithDefaults(requestOptions, (err, { statusCode, headers }, body) => {
+    requestWithDefaults(requestOptions, (err, response, body) => {
       if (err) return callback(err);
 
+      let { statusCode, headers } = response;
       const retryAfter = headers['Retry-After'] || headers['retry-after'];
       if (statusCode === 200) {
-        Logger.trace({ headers }, 'Results of Sharepoint query headers');
+        //Logger.trace({ headers }, 'Results of Sharepoint query headers');
 
         callback(null, body);
       } else if ([429, 500, 503].includes(statusCode) && totalRetriesLeft) {
@@ -314,7 +366,7 @@ async function doLookup(entities, options, callback) {
       querySharepoint(entity, token, options, async (err, body) => {
         if (err) return done(err);
 
-        Logger.trace({ entity, body }, 'Results of Sharepoint query');
+        //Logger.trace({ entity, body }, 'Results of Sharepoint query');
 
         if (body.PrimaryQueryResult.RelevantResults.RowCount < 1) return done(null, { entity, data: null });
 
@@ -342,7 +394,7 @@ async function doLookup(entities, options, callback) {
       return;
     }
 
-    Logger.trace({ lookupResults }, 'Results');
+    //Logger.trace({ lookupResults }, 'Results');
 
     callback(null, lookupResults);
   });
@@ -401,7 +453,7 @@ function validateOptions(options, callback) {
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
   validateStringOption(errors, options, 'publicKeyPath', 'You must provide a public key file path.');
   validateStringOption(errors, options, 'privateKeyPath', 'You must provide a private key file path.');
-  
+
   const subsiteStartWithError =
     options.subsite.value && options.subsite.value.startsWith('//')
       ? {
