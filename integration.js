@@ -336,8 +336,6 @@ function querySharepoint(entity, token, options, callback) {
 const parseErrorToReadableJSON = (error) => JSON.parse(JSON.stringify(error, Object.getOwnPropertyNames(error)));
 
 async function doLookup(entities, options, callback) {
-  Logger.trace('starting lookup');
-
   options.subsite = options.subsite.startsWith('/') ? options.subsite.slice(1) : options.subsite;
 
   Logger.trace({ options }, 'doLookup options');
@@ -394,7 +392,7 @@ async function doLookup(entities, options, callback) {
       return;
     }
 
-    //Logger.trace({ lookupResults }, 'Results');
+    Logger.trace({ lookupResults }, 'Results');
 
     callback(null, lookupResults);
   });
