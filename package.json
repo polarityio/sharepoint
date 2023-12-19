@@ -1,12 +1,12 @@
 {
   "name": "sharepoint",
-  "version": "3.5.1",
+  "version": "3.5.2",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",
   "author": "Polarity",
   "dependencies": {
-    "async": "^3.2.4",
+    "async": "^3.2.5",
     "node-cache": "^5.1.2",
     "postman-request": "^2.88.1-postman.33",
     "xbytes": "^1.8.0",
