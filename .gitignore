@@ -44,3 +44,6 @@ key/
 *.key
 *.pem
 *.cer
+
+# Ignore package-lock.json
+package-lock.json
