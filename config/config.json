@@ -5,16 +5,8 @@
   "defaultColor": "light-gray",
   "onDemandOnly": true,
   "description": "Polarity Sharepoint integration",
-  "entityTypes": [
-    "IP",
-    "hash",
-    "domain",
-    "string",
-    "email"
-  ],
-  "styles": [
-    "./styles/sharepoint.less"
-  ],
+  "entityTypes": ["IP", "hash", "domain", "string", "email", "cve"],
+  "styles": ["./styles/sharepoint.less"],
   "block": {
     "component": {
       "file": "./components/sharepoint-block.js"
