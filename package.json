@@ -1,6 +1,6 @@
 {
   "name": "sharepoint",
-  "version": "3.5.3",
+  "version": "3.5.4",
   "main": "./integration.js",
   "private": true,
   "license": "MIT",
