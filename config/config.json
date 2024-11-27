@@ -5,6 +5,8 @@
   "defaultColor": "light-gray",
   "onDemandOnly": true,
   "description": "Polarity Sharepoint integration",
+  "supportsAdditionalCustomTypes": true,
+  "dataTypes": ["IPv4", "IPv6", "IPv4CIDR", "MD5", "SHA1", "SHA256", "domain", "string", "email", "cve"],
   "entityTypes": ["IPv4", "IPv6", "IPv4CIDR", "MD5", "SHA1", "SHA256", "domain", "string", "email", "cve"],
   "styles": ["./styles/sharepoint.less"],
   "block": {
@@ -14,13 +16,6 @@
     "template": {
       "file": "./templates/sharepoint-block.hbs"
     }
-  },
-  "request": {
-    "cert": "",
-    "key": "",
-    "passphrase": "",
-    "ca": "",
-    "proxy": ""
   },
   "logging": {
     "level": "info"
