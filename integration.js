@@ -159,34 +159,26 @@ function maybeSetClientApplication(options) {
   Logger.trace({ options }, 'maybeSetClientApplication');
 
   if (clientApplication === null) {
-    if (!fs.existsSync(options.privateKeyPath)) {
-      throw new Error(`Private key file does not exist at ${options.privateKeyPath}`);
-    }
-    if (!fs.existsSync(options.publicKeyPath)) {
-      throw new Error(`Public key file does not exist at ${options.publicKeyPath}`);
-    }
-    const privateKeySource = fs.readFileSync(options.privateKeyPath);
-    const publicKeySource = fs
-      .readFileSync(options.publicKeyPath)
-      .toString()
-      .split('\n')
-      .filter((line) => !line.includes('-----'))
-      .map((line) => line.trim())
-      .join('');
-    const publicKeySourceBase64 = Buffer.from(publicKeySource, 'base64');
-    const publicKeyThumbprint = crypto.createHash('sha1').update(publicKeySourceBase64, 'utf8').digest('hex');
+    // The private key is currently retrieved from a text input which does not preserve
+    // newlines. For the key to work properly we have to re-add the newlines.
+    let key = options.privateKey.trim();
+    key = key.replace('-----BEGIN PRIVATE KEY-----', '');
+    key = key.replace('-----END PRIVATE KEY-----', '');
+    key = key.replace(/\s+/g, '\n');
+    key = '-----BEGIN PRIVATE KEY-----' + key + '-----END PRIVATE KEY-----';
 
     const privateKeyOptions = {
-      key: privateKeySource,
+      key: key,
       format: 'pem'
     };
 
-    if (options.privateKeyPassphrase) {
+    if (options.privateKeyPassphrase && options.privateKeyPassphrase.length > 0) {
       privateKeyOptions.passphrase = options.privateKeyPassphrase;
     }
 
-    const privateKeyObject = crypto.createPrivateKey(privateKeyOptions);
+    Logger.trace({ privateKeyOptions }, 'Private Key Options');
 
+    const privateKeyObject = crypto.createPrivateKey(privateKeyOptions);
     const privateKey = privateKeyObject.export({
       format: 'pem',
       type: 'pkcs8'
@@ -202,7 +194,7 @@ function maybeSetClientApplication(options) {
         clientId: options.clientId,
         authority: `https://login.microsoftonline.com/${options.tenantId}`,
         clientCertificate: {
-          thumbprint: publicKeyThumbprint,
+          thumbprint: options.publicKeyThumbprint,
           privateKey
         }
       },
@@ -370,7 +362,10 @@ async function doLookup(entities, options, callback) {
 
         let details = formatSearchResults(body, options);
         if (details.length < 1) return done(null, { entity, data: null });
-        let tags = details.map(({ Title, FileType }) => `${Title}.${FileType}`);
+        let tags = details.slice(0, 3).map(({ Title, FileType }) => `${Title}.${FileType}`);
+        if (details.length > 3) {
+          tags.push(`${details.length - 3} more results`);
+        }
 
         done(null, {
           entity,
@@ -449,15 +444,17 @@ function validateOptions(options, callback) {
   validateStringOption(errors, options, 'host', 'You must provide a Host option.');
   validateStringOption(errors, options, 'clientId', 'You must provide a Client ID option.');
   validateStringOption(errors, options, 'tenantId', 'You must provide a Tenant ID option.');
-  validateStringOption(errors, options, 'publicKeyPath', 'You must provide a public key file path.');
-  validateStringOption(errors, options, 'privateKeyPath', 'You must provide a private key file path.');
+  validateStringOption(errors, options, 'publicKeyThumbprint', 'You must provide a Public Key Thumbprint.');
+  validateStringOption(errors, options, 'privateKey', 'You must provide Private Key Content.');
 
   const subsiteStartWithError =
     options.subsite.value && options.subsite.value.startsWith('//')
-      ? {
-          key: 'subsite',
-          message: 'Your subsite must not start with a //'
-        }
+      ? [
+          {
+            key: 'subsite',
+            message: 'Your subsite must not start with a //'
+          }
+        ]
       : [];
 
   callback(null, errors.concat(subsiteStartWithError));

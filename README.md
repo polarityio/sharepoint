@@ -35,13 +35,13 @@ Once the application is created, record the `Application (client) ID` and `Direc
 
 ### Upload a public key certificate
 
-Sharepoint Azure Apps require that  app-based authentication is done via a certificate (Client secret based authentication is not supported by Azure for Sharepoint).  Upload your public key to Azure by navigating to "Certificates & secrets" and clicking on the "Upload certificate" button to upload your **public** key to Azure. 
+Sharepoint Azure Apps require that app-based authentication is done via a certificate (Client secret based authentication is not supported by Azure for Sharepoint). Upload your public key to Azure by navigating to "Certificates & secrets" and clicking on the "Upload certificate" button to upload your **public** key to Azure.
 
 <img src="./images/upload-cert.png" width="500px">
 
-The public/private key pair must be encoded in the **PEM** format using the **PKCS8** container.  
+The public/private key pair must be encoded in the **PEM** format using the **PKCS8** container.
 
-You can check to see if your private key is in the right format by viewing the content of the key.  The file content should look like this:
+You can check to see if your private key is in the right format by viewing the content of the key. The file content should look like this:
 
 ```
 -----BEGIN PRIVATE KEY-----
@@ -56,21 +56,13 @@ You can create a self-signed public/private key pair using the following command
 openssl req -x509 -nodes -sha256 -days 365 -newkey rsa:2048 -keyout private.key -out public.crt
 ```
 
-> Note that the above command will create a private key that is not encrypted with a passphrase.  If you want to encrypt the private key with a passphrase you can add the `-passout pass:<your-password>` option to the command above.
+> Note that the above command will create a private key that is not encrypted with a passphrase. If you want to encrypt the private key with a passphrase you can add the `-passout pass:<your-password>` option to the command above.
 
-The above command will generate a private key called `private.key` and a public key called `public.crt`.  Upload `public.crt` to your Azure application. 
+The above command will generate a private key called `private.key` and a public key called `public.crt`. Upload `public.crt` to your Azure application.
 
-Both the public and private key should be saved on the Polarity Server.  By default, the integration will look for the public and private key in the `./certs` directory.  To use the default settings, your directory structure should look like this:
+After uploading the certificate to Azure, you'll need to record the **thumbprint** of the certificate. This can be found in the Azure portal under "Certificates & secrets" after uploading your certificate. The thumbprint will be displayed in the certificate list.
 
-```
-| /app/polarity-server/integration/sharepoint/certs
-|------- public.crt
-|------- private.key
-```
-
-> The public key file is required so that the integration can compute the thumbprint of the public key.  The thumbprint is used to authenticate with Azure.
-
-If you need to change the location or filename of the public and private key be sure to update the "Private Key File Path" and "Public Key File Path" integration options.
+You'll also need the content of your private key file for the integration configuration. The private key content will be pasted directly into the integration options rather than referencing a file path.
 
 
 ### Set API Permissions
@@ -94,22 +86,15 @@ For more information on the "Sites.Selected" permission please see https://devbl
 
 ### Configure the Integration
 
-1. SSH into the Polarity Server and copy or upload the public and private keys into the integration's `certs` directory.  We recommend that your keys are named `private.key` and `public.crt`.  
+1. From the integration's settings page (within Polarity), fill in your SharePoint host information which will typically look like `https://[TENANT-NAME].sharepoint.com`.
 
-2. Ensure the keys are readable by the `polarityd` user:
+2. Fill in the Application (client ID), and Directory (tenant) ID values that you recorded when you registered your Azure application.
 
-```
-sudo chown polarityd:polarityd /app/polarity-server/integrations/sharepoint/certs/private.key
-sudo chown polarityd:polarityd /app/polarity-server/integrations/sharepoint/certs/public.key
-```
+3. Fill in the **Azure AD App Public Key Thumbprint** with the thumbprint value you recorded from the Azure portal after uploading your certificate.
 
-3. From the integration's settings page (within Polarity), fill in your SharePoint host information which will typically look like `https://[TENANT-NAME].sharepoint.com`.
+4. Fill in the **Azure AD App Private Key Content** with the entire content of your private key file. This should include the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` markers and all content in between.
 
-4. Fill in the Application (client ID), and Directory (tenant) ID values that you recorded when you registered your Azure application.
-
-5. If you placed your `private.key` and `public.crt` files into the default locations you do not need to modify the "Private/Public Key File Path" options.
-
-6. If your private key has a passphrase then provide the passphrase for the "Private Key Passphrase" option.
+5. If your private key has a passphrase then provide the passphrase for the "Private Key Passphrase" option.
 
 The integration should now be able to authenticate to your SharePoint instance.  You can further configure the integration by reviewing the full options list below.
 
@@ -126,25 +111,18 @@ The Application (client) ID to use for authentication.
 
 The Directory (tenant) id to authenticate inside of.
 
-### Private Key File Path
+### Azure AD App Public Key Thumbprint
 
-The Polarity Server file path to the private key file to use for authentication. Relative paths should start with "./" and are relative to this integration's directory. The private key must be encoded in the PEM format using the PKCS8 container. 
+Your Azure AD Registered App's Public Key Thumbprint for certificate-based authentication. This value can be found in the Azure portal under "Certificates & secrets" after uploading your certificate.
 
-Defaults to "./certs/private.key".
+### Azure AD App Private Key Content
 
-You must restart the integration after making changes to this option.
+Your Azure AD Registered App's Private Key Content. The private key must be encoded in the PEM format using the PKCS8 container. Paste the entire content of your private key file including the `-----BEGIN PRIVATE KEY-----` and `-----END PRIVATE KEY-----` markers.
 
 ### Private Key Passphrase
 
 The passphrase for the private key. Leave blank if the private key does not have a passphrase.
 
-### Public Key File Path
-
-The Polarity Server file path to the public key file that corresponds to the private key used for authentication. Relative paths should start with "./" and are relative to this integration's directory. The public key must be encoded in the PEM format using the PKCS8 container. 
-
-Defaults to "./certs/public.crt".
-
-You must restart the integration after making changes to this option.
 
 ### Subsite Search Path
 
