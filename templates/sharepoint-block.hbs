@@ -1,61 +1,56 @@
-<div>
-    {{#each block.data.details as |document index|}}
-    {{#if (gt index 0)}}
-      <hr>
+{{#each block.data.details as |document index|}}
+  <div class="document-container">
+    <div class="p-title">
+      {{document.Title}}
+    </div>
+    <div class="d-flex">
+      {{#if document.ServerRedirectedURL}}
+        <div>
+          <a href="{{document.ServerRedirectedURL}}">View {{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a>
+        </div>
+      {{/if}}
+
+      {{#if (and document.Path document.ServerRedirectedURL)}}
+        <div class="mx-1"> | </div>
+      {{/if}}
+
+      {{#if document.Path}}
+        <div>
+          <a class="p-link" title="Download file from SharePoint" href="{{document.Path}}">Download {{fa-icon icon="download" fixedWidth=true class="external-link-icon"}}</a>
+        </div>
+      {{/if}}
+    </div>
+    <div>
+        <span class="p-key">Author: </span>
+        <span class="p-value">{{document.Author}}</span>
+    </div>
+    {{#if document.Description}}
+      <div>
+        <span class="p-key">Description: </span>
+        <span class="p-description">{{document.Description}}</span>
+      </div>
     {{/if}}
     <div>
-        <div class="p-title">
-          {{fa-icon icon=document._icon fixedWidth=true}}{{document.Title}}
-        </div>
-        <div class="d-flex">
-          {{#if document.ServerRedirectedURL}}
-            <div>
-              <a href="{{document.ServerRedirectedURL}}">View {{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a>
-            </div>
-          {{/if}}
-
-          {{#if (and document.Path document.ServerRedirectedURL)}}
-            <div class="mx-1"> | </div>
-          {{/if}}
-
-          {{#if document.Path}}
-            <div>
-              <a class="p-link" title="Download file from SharePoint" href="{{document.Path}}">Download {{fa-icon icon="download" fixedWidth=true class="external-link-icon"}}</a>
-            </div>
-          {{/if}}
-        </div>
-        <div>
-            <span class="p-key">Author: </span>
-            <span class="p-value">{{document.Author}}</span>
-        </div>
-        {{#if document.Description}}
-          <div>
-            <span class="p-key">Description: </span>
-            <span class="p-description">{{document.Description}}</span>
-          </div>
-        {{/if}}
-        <div>
-            <span class="p-key">Size: </span>
-            <span class="p-value">{{document._sizeHumanReadable}}</span>
-        </div>
-        <div>
-          <span class="p-key">Folder: </span>
-          <span class="p-value"><a class="p-link" title="Open in SharePoint" href="{{document.ParentLink}}">{{document._containingFolder}}{{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a></span>
-        </div>
-        <div>
-            <span class="p-key">Last Modified: </span>
-            <span class="p-value">{{moment-format document.LastModifiedTime timeZone=timezone}}</span>
-        </div>
-        <div>
-            <span class="p-key">File Type: </span>
-            <span class="p-value">{{document.FileType}}</span>
-        </div>
-        {{#if document.HitHighlightedSummary}}
-          <div>
-            <span class="p-key">Search Highlight: </span>
-            <span class="p-block">{{{document.HitHighlightedSummary}}}</span>
-          </div>
-        {{/if}}
+        <span class="p-key">Size: </span>
+        <span class="p-value">{{document._sizeHumanReadable}}</span>
     </div>
-    {{/each}}
+    <div>
+      <span class="p-key">Folder: </span>
+      <span class="p-value"><a class="p-link" title="Open in SharePoint" href="{{document.ParentLink}}">{{document._containingFolder}}{{fa-icon icon="external-link-square" fixedWidth=true class="external-link-icon"}}</a></span>
+    </div>
+    <div>
+        <span class="p-key">Last Modified: </span>
+        <span class="p-value">{{moment-format document.LastModifiedTime timeZone=timezone}}</span>
+    </div>
+    <div>
+        <span class="p-key">File Type: </span>
+        <span class="p-value">{{document.FileType}}</span>
+    </div>
+    {{#if document.HitHighlightedSummary}}
+      <div>
+        <span class="p-key">Search Highlight: </span>
+        <span class="p-block">{{{document.HitHighlightedSummary}}}</span>
+      </div>
+    {{/if}}
 </div>
+{{/each}}
