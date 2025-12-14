@@ -209,7 +209,9 @@ function maybeSetClientApplication(options) {
       system: {
         loggerOptions: {
           loggerCallback(logLevel, message, containsPii) {
-            Logger[msalLogLevelToPolarity(logLevel)]({ logLevel, message, containsPii }, 'MSAL Logger');
+            if (config.logging.level !== 'info') {
+              Logger[msalLogLevelToPolarity(logLevel)]({ logLevel, message, containsPii }, 'MSAL Logger');
+            }
           },
           piiLoggingEnabled: config.logging.level === 'trace' ? true : false,
           logLevel: polarityToMsalLogLevel(config.logging.level)
