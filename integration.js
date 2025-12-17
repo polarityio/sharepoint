@@ -180,7 +180,7 @@ function maybeSetClientApplication(options) {
       format: 'pem'
     };
 
-    if (options.privateKeyPassphrase && options.privateKeyPassphrase.length > 0) {
+    if (options.privateKeyPassphrase?.length > 0) {
       privateKeyOptions.passphrase = options.privateKeyPassphrase;
     }
 
