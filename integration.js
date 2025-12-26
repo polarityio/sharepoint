@@ -162,19 +162,25 @@ function maybeSetClientApplication(options) {
     // newlines. For the key to work properly we have to re-add the newlines.
     let keyInput = options.privateKey.trim();
 
-    // Robustly extract and reconstruct the PEM key
-    const pemMatch = keyInput.match(/-----BEGIN PRIVATE KEY-----([\s\S]+?)-----END PRIVATE KEY-----/);
+    // Use a single regex with capture groups to handle both PKCS8 and PKCS1 formats
+    const pemMatch = keyInput.match(/-----BEGIN ((?:RSA )?PRIVATE KEY)-----([\s\S]+?)-----END \1-----/);
+    
     if (!pemMatch) {
-      throw new Error('Invalid private key format: missing or malformed BEGIN/END PRIVATE KEY markers.');
+      throw new Error('Invalid private key format: missing or malformed BEGIN/END PRIVATE KEY markers. Supported formats: PKCS8 (-----BEGIN PRIVATE KEY-----) and PKCS1 (-----BEGIN RSA PRIVATE KEY-----).');
     }
-    let base64Content = pemMatch[1].replace(/[\r\n\s]/g, '');
-    // Validate base64 content
-    if (!/^[A-Za-z0-9+/=]+$/.test(base64Content)) {
+
+    const [, keyType, base64Content] = pemMatch;
+    
+    // Clean and validate base64 content
+    const cleanedBase64 = base64Content.replace(/[\r\n\s]/g, '');
+    if (!/^[A-Za-z0-9+/=]+$/.test(cleanedBase64)) {
       throw new Error('Invalid private key format: non-base64 content detected.');
     }
-    // Wrap base64 content at 64 characters per line
-    const wrappedContent = base64Content.replace(/(.{1,64})/g, '$1\n').trim();
-    const key = '-----BEGIN PRIVATE KEY-----\n' + wrappedContent + '\n-----END PRIVATE KEY-----';
+    
+    // Wrap base64 content at 64 characters per line and reconstruct PEM format
+    const wrappedContent = cleanedBase64.replace(/(.{1,64})/g, '$1\n').trim();
+    const key = `-----BEGIN ${keyType}-----\n${wrappedContent}\n-----END ${keyType}-----`;
+
     const privateKeyOptions = {
       key: key,
       format: 'pem'
